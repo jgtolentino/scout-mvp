@@ -112,14 +112,14 @@ const Overview: React.FC = () => {
     <div className="space-y-6">
       {/* Header */}
       <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg p-6 text-white">
-        <h1 className="text-2xl font-bold mb-2">Executive Dashboard</h1>
+        <h1 className="dashboard-title font-bold mb-2">Executive Dashboard</h1>
         <p className="text-blue-100">
           Real-time insights from {kpiData.totalTransactions.toLocaleString()} transactions
         </p>
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="kpi-grid">
         <KpiCard
           title="Total Revenue"
           value={new Intl.NumberFormat('en-PH', {
