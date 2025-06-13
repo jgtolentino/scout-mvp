@@ -17,7 +17,7 @@ const KpiCard: React.FC<KpiCardProps> = ({ title, value, change, icon, onClick }
   return (
     <div
       className={clsx(
-        "bg-white rounded-lg border border-gray-200 p-6 shadow-sm transition-all duration-200",
+        "kpi-card bg-white rounded-lg border border-gray-200 shadow-sm transition-all duration-200",
         onClick && "cursor-pointer hover:shadow-md hover:border-blue-200"
       )}
       onClick={onClick}
@@ -28,8 +28,8 @@ const KpiCard: React.FC<KpiCardProps> = ({ title, value, change, icon, onClick }
             {icon}
           </div>
           <div>
-            <p className="text-sm font-medium text-gray-600">{title}</p>
-            <p className="text-2xl font-bold text-gray-900">{value}</p>
+            <p className="metric-label font-medium text-gray-600">{title}</p>
+            <p className="metric-value font-bold text-gray-900">{value}</p>
           </div>
         </div>
         <div className="flex items-center space-x-1">

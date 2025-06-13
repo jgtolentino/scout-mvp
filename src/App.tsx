@@ -16,19 +16,25 @@ function App() {
   }, [initializeFromURL]);
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <GlobalFilterBar />
+    <div className="dashboard-container min-h-screen bg-gray-50">
+      <div className="filter-bar">
+        <GlobalFilterBar />
+      </div>
       
       <div className="flex">
-        <Sidebar />
+        <div className="sidebar">
+          <Sidebar />
+        </div>
         
         <main className="flex-1 lg:ml-64 p-6">
-          <Routes>
-            <Route path="/" element={<Overview />} />
-            <Route path="/trends" element={<TransactionTrends />} />
-            <Route path="/products" element={<ProductMix />} />
-            <Route path="/consumers" element={<ConsumerInsights />} />
-          </Routes>
+          <div className="dashboard-grid">
+            <Routes>
+              <Route path="/" element={<Overview />} />
+              <Route path="/trends" element={<TransactionTrends />} />
+              <Route path="/products" element={<ProductMix />} />
+              <Route path="/consumers" element={<ConsumerInsights />} />
+            </Routes>
+          </div>
         </main>
       </div>
     </div>
