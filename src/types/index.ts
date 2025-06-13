@@ -87,3 +87,60 @@ export interface TimeSeriesData {
   value: number;
   label?: string;
 }
+
+export interface DashboardSummary {
+  total_revenue: number;
+  total_transactions: number;
+  average_order_value: number;
+  unique_customers: number;
+  revenue_growth: number;
+  transaction_growth: number;
+  aov_growth: number;
+}
+
+export interface LocationDistribution {
+  barangay: string;
+  transaction_count: number;
+  total_revenue: number;
+  percentage: number;
+}
+
+export interface CategorySummary {
+  category: string;
+  transaction_count: number;
+  total_revenue: number;
+  percentage: number;
+  avg_price: number;
+}
+
+export interface BrandPerformance {
+  brand_name: string;
+  transaction_count: number;
+  total_revenue: number;
+  percentage: number;
+  avg_price: number;
+}
+
+export interface HourlyTrend {
+  hour: number;
+  transaction_count: number;
+  total_revenue: number;
+}
+
+export interface DailyTrend {
+  date: string;
+  transaction_count: number;
+  total_revenue: number;
+}
+
+export interface AgeDistribution {
+  age_group: string;
+  count: number;
+  percentage: number;
+}
+
+export interface GenderDistribution {
+  gender: string;
+  count: number;
+  percentage: number;
+}

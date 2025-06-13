@@ -9,22 +9,30 @@ import {
   getHourlyTrends,
   getDailyTrends,
   getAgeDistribution,
-  getGenderDistribution,
-  getPurchaseBehaviorByAge,
-  getPurchasePatternsByTime
+  getGenderDistribution
 } from '../lib/supabase';
+import type {
+  DashboardSummary,
+  LocationDistribution,
+  CategorySummary,
+  BrandPerformance,
+  HourlyTrend,
+  DailyTrend,
+  AgeDistribution,
+  GenderDistribution
+} from '../types';
 
 export const useSupabaseData = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [dashboardData, setDashboardData] = useState<any>(null);
-  const [locationData, setLocationData] = useState<any[]>([]);
-  const [categoryData, setCategoryData] = useState<any[]>([]);
-  const [brandData, setBrandData] = useState<any[]>([]);
-  const [hourlyTrends, setHourlyTrends] = useState<any[]>([]);
-  const [dailyTrends, setDailyTrends] = useState<any[]>([]);
-  const [ageDistribution, setAgeDistribution] = useState<any[]>([]);
-  const [genderDistribution, setGenderDistribution] = useState<any[]>([]);
+  const [dashboardData, setDashboardData] = useState<DashboardSummary | null>(null);
+  const [locationData, setLocationData] = useState<LocationDistribution[]>([]);
+  const [categoryData, setCategoryData] = useState<CategorySummary[]>([]);
+  const [brandData, setBrandData] = useState<BrandPerformance[]>([]);
+  const [hourlyTrends, setHourlyTrends] = useState<HourlyTrend[]>([]);
+  const [dailyTrends, setDailyTrends] = useState<DailyTrend[]>([]);
+  const [ageDistribution, setAgeDistribution] = useState<AgeDistribution[]>([]);
+  const [genderDistribution, setGenderDistribution] = useState<GenderDistribution[]>([]);
 
   const { dateRange, barangays, categories, brands, stores } = useFilterStore();
   
@@ -32,7 +40,7 @@ export const useSupabaseData = () => {
   const mockData = useTransactionData();
 
   const buildFilters = () => {
-    const filters: any = {};
+    const filters: Record<string, string | string[]> = {};
     
     if (dateRange.from) filters.p_start_date = dateRange.from.toISOString();
     if (dateRange.to) filters.p_end_date = dateRange.to.toISOString();

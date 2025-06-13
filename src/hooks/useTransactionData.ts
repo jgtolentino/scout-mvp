@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { mockTransactions } from '../data/mockData';
 import { useFilterStore } from '../store/useFilterStore';
-import { Transaction, KPIData, ChartData, TimeSeriesData } from '../types';
+import { KPIData, ChartData, TimeSeriesData } from '../types';
 import { isWithinInterval, format, subDays, parseISO, getHours } from 'date-fns';
 
 export const useTransactionData = () => {

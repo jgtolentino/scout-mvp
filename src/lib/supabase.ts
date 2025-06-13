@@ -1,4 +1,14 @@
 import { createClient } from '@supabase/supabase-js'
+import type {
+  DashboardSummary,
+  LocationDistribution,
+  CategorySummary,
+  BrandPerformance,
+  HourlyTrend,
+  DailyTrend,
+  AgeDistribution,
+  GenderDistribution
+} from '../types'
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
@@ -10,7 +20,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
 export const supabase = createClient(supabaseUrl || '', supabaseAnonKey || '')
 
 // Database function calls with error handling
-export const getDashboardSummary = async (filters: any = {}) => {
+export const getDashboardSummary = async (filters: Record<string, string | string[]> = {}): Promise<DashboardSummary> => {
   try {
     const { data, error } = await supabase.rpc('get_dashboard_summary', { filters })
     if (error) throw error
@@ -21,7 +31,7 @@ export const getDashboardSummary = async (filters: any = {}) => {
   }
 }
 
-export const getLocationDistribution = async (filters: any = {}) => {
+export const getLocationDistribution = async (filters: Record<string, string | string[]> = {}): Promise<LocationDistribution[]> => {
   try {
     const { data, error } = await supabase.rpc('get_location_distribution', { filters })
     if (error) throw error
@@ -32,7 +42,7 @@ export const getLocationDistribution = async (filters: any = {}) => {
   }
 }
 
-export const getProductCategoriesSummary = async (filters: any = {}) => {
+export const getProductCategoriesSummary = async (filters: Record<string, string | string[]> = {}): Promise<CategorySummary[]> => {
   try {
     const { data, error } = await supabase.rpc('get_product_categories_summary', { filters })
     if (error) throw error
@@ -43,7 +53,7 @@ export const getProductCategoriesSummary = async (filters: any = {}) => {
   }
 }
 
-export const getBrandPerformance = async (filters: any = {}) => {
+export const getBrandPerformance = async (filters: Record<string, string | string[]> = {}): Promise<BrandPerformance[]> => {
   try {
     const { data, error } = await supabase.rpc('get_brand_performance', { filters })
     if (error) throw error
@@ -54,7 +64,7 @@ export const getBrandPerformance = async (filters: any = {}) => {
   }
 }
 
-export const getHourlyTrends = async (filters: any = {}) => {
+export const getHourlyTrends = async (filters: Record<string, string | string[]> = {}): Promise<HourlyTrend[]> => {
   try {
     const { data, error } = await supabase.rpc('get_hourly_trends', { filters })
     if (error) throw error
@@ -65,7 +75,7 @@ export const getHourlyTrends = async (filters: any = {}) => {
   }
 }
 
-export const getDailyTrends = async (filters: any = {}) => {
+export const getDailyTrends = async (filters: Record<string, string | string[]> = {}): Promise<DailyTrend[]> => {
   try {
     const { data, error } = await supabase.rpc('get_daily_trends', { filters })
     if (error) throw error
@@ -76,7 +86,7 @@ export const getDailyTrends = async (filters: any = {}) => {
   }
 }
 
-export const getAgeDistribution = async (filters: any = {}) => {
+export const getAgeDistribution = async (filters: Record<string, string | string[]> = {}): Promise<AgeDistribution[]> => {
   try {
     const { data, error } = await supabase.rpc('get_age_distribution_simple', { filters })
     if (error) throw error
@@ -87,7 +97,7 @@ export const getAgeDistribution = async (filters: any = {}) => {
   }
 }
 
-export const getGenderDistribution = async (filters: any = {}) => {
+export const getGenderDistribution = async (filters: Record<string, string | string[]> = {}): Promise<GenderDistribution[]> => {
   try {
     const { data, error } = await supabase.rpc('get_gender_distribution_simple', { filters })
     if (error) throw error
@@ -98,24 +108,3 @@ export const getGenderDistribution = async (filters: any = {}) => {
   }
 }
 
-export const getPurchaseBehaviorByAge = async (filters: any = {}) => {
-  try {
-    const { data, error } = await supabase.rpc('get_purchase_behavior_by_age', { filters })
-    if (error) throw error
-    return data
-  } catch (error) {
-    console.error('getPurchaseBehaviorByAge error:', error)
-    throw error
-  }
-}
-
-export const getPurchasePatternsByTime = async (filters: any = {}) => {
-  try {
-    const { data, error } = await supabase.rpc('get_purchase_patterns_by_time', { filters })
-    if (error) throw error
-    return data
-  } catch (error) {
-    console.error('getPurchasePatternsByTime error:', error)
-    throw error
-  }
-}

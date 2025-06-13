@@ -4,7 +4,6 @@ import { useSupabaseData } from '../hooks/useSupabaseData';
 import ChartCard from '../components/ui/ChartCard';
 import LineChart from '../components/charts/LineChart';
 import BarChart from '../components/charts/BarChart';
-import { format, parseISO, getHours, getDay } from 'date-fns';
 
 const TransactionTrends: React.FC = () => {
   const { 

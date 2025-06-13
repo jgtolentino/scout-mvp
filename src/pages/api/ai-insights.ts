@@ -54,7 +54,7 @@ export default async function handler(
 
     const text = poll.choices[0].message?.content || ''
     // Expecting JSON array; parse defensively
-    let raw: any
+    let raw: unknown
     try {
       raw = JSON.parse(text)
     } catch {
@@ -72,8 +72,8 @@ export default async function handler(
       : []
 
     return res.status(200).json({ insights })
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('AI insight error', err)
-    return res.status(500).json({ error: err.message || 'AI request failed' })
+    return res.status(500).json({ error: (err as Error).message || 'AI request failed' })
   }
 }

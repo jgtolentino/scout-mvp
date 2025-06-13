@@ -5,6 +5,7 @@ import ChartCard from '../components/ui/ChartCard';
 import DonutChart from '../components/charts/DonutChart';
 import BarChart from '../components/charts/BarChart';
 import { useFilterStore } from '../store/useFilterStore';
+import { ChartData } from '../types';
 
 const ProductMix: React.FC = () => {
   const { 
@@ -70,11 +71,11 @@ const ProductMix: React.FC = () => {
     { name: 'Colgate Toothpaste', value: 42000, quantity: 210 },
   ];
 
-  const handleCategoryClick = (category: any) => {
+  const handleCategoryClick = (category: ChartData) => {
     setCategories([category.name]);
   };
 
-  const handleBrandClick = (brand: any) => {
+  const handleBrandClick = (brand: ChartData) => {
     setBrands([brand.name]);
   };
 
@@ -158,7 +159,7 @@ const ProductMix: React.FC = () => {
 
       {/* Category Insights */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {chartCategoryData.slice(0, 3).map((category, index) => (
+        {chartCategoryData.slice(0, 3).map((category) => (
           <div key={category.name} className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center space-x-2">

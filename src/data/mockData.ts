@@ -1,5 +1,5 @@
 import { Transaction, Product, Brand, Store, Customer, AIInsight } from '../types';
-import { subDays, format } from 'date-fns';
+import { subDays } from 'date-fns';
 
 // Mock Brands
 export const mockBrands: Brand[] = [

@@ -1,11 +1,11 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { BrowserRouter } from 'react-router-dom'
 import App from '../App'
 
 // Mock the charts to avoid canvas issues in tests
 vi.mock('recharts', () => ({
-  ResponsiveContainer: ({ children }: any) => <div data-testid="responsive-container">{children}</div>,
+  ResponsiveContainer: ({ children }: { children: React.ReactNode }) => <div data-testid="responsive-container">{children}</div>,
   BarChart: () => <div data-testid="bar-chart" />,
   LineChart: () => <div data-testid="line-chart" />,
   PieChart: () => <div data-testid="pie-chart" />,

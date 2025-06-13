@@ -8,6 +8,7 @@ import LineChart from '../components/charts/LineChart';
 import AIInsightsPanel from '../components/insights/AIInsightsPanel';
 import { useNavigate } from 'react-router-dom';
 import { useFilterStore } from '../store/useFilterStore';
+import { ChartData } from '../types';
 
 const Overview: React.FC = () => {
   const { 
@@ -21,7 +22,7 @@ const Overview: React.FC = () => {
   const navigate = useNavigate();
   const { setCategories } = useFilterStore();
 
-  const handleCategoryClick = (category: any) => {
+  const handleCategoryClick = (category: ChartData) => {
     setCategories([category.name]);
     navigate('/products');
   };

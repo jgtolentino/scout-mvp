@@ -10,7 +10,7 @@ interface DonutChartProps {
 const COLORS = ['#3B82F6', '#14B8A6', '#F97316', '#EF4444', '#8B5CF6', '#06B6D4', '#84CC16', '#F59E0B'];
 
 const DonutChart: React.FC<DonutChartProps> = ({ data, onSegmentClick }) => {
-  const handleClick = (data: any, index: number) => {
+  const handleClick = (data: ChartData) => {
     if (onSegmentClick) {
       onSegmentClick(data);
     }

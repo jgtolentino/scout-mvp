@@ -9,7 +9,7 @@ interface BarChartProps {
 }
 
 const BarChart: React.FC<BarChartProps> = ({ data, onBarClick, color = '#3B82F6' }) => {
-  const handleClick = (data: any) => {
+  const handleClick = (data: ChartData) => {
     if (onBarClick) {
       onBarClick(data);
     }

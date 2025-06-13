@@ -9,7 +9,7 @@ interface LineChartProps {
 }
 
 const LineChart: React.FC<LineChartProps> = ({ data, onPointClick, color = '#3B82F6' }) => {
-  const handleClick = (data: any) => {
+  const handleClick = (data: TimeSeriesData) => {
     if (onPointClick) {
       onPointClick(data);
     }
