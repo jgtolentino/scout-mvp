@@ -85,30 +85,30 @@ export const useSupabaseData = () => {
       } catch (supabaseError) {
         console.warn('Supabase functions not available, falling back to mock data:', supabaseError);
         
-        // Fallback to mock data
+        // Fallback to mock data with enhanced data types
         setDashboardData(mockData.kpiData);
         setLocationData(mockData.storeData);
         setCategoryData(mockData.categoryData);
         setBrandData(mockData.brandData);
-        setHourlyTrends([]);
+        setHourlyTrends(mockData.hourlyTrends);
         setDailyTrends(mockData.timeSeriesData);
-        setAgeDistribution([]);
-        setGenderDistribution([]);
+        setAgeDistribution(mockData.ageDistribution);
+        setGenderDistribution(mockData.genderDistribution);
       }
       
     } catch (err) {
       console.error('Error fetching data:', err);
       setError(err instanceof Error ? err.message : 'An error occurred');
       
-      // Even on error, provide mock data as fallback
+      // Even on error, provide mock data as fallback with all data types
       setDashboardData(mockData.kpiData);
       setLocationData(mockData.storeData);
       setCategoryData(mockData.categoryData);
       setBrandData(mockData.brandData);
-      setHourlyTrends([]);
+      setHourlyTrends(mockData.hourlyTrends);
       setDailyTrends(mockData.timeSeriesData);
-      setAgeDistribution([]);
-      setGenderDistribution([]);
+      setAgeDistribution(mockData.ageDistribution);
+      setGenderDistribution(mockData.genderDistribution);
     } finally {
       setLoading(false);
     }

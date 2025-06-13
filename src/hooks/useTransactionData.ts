@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { mockTransactions } from '../data/mockData';
 import { useFilterStore } from '../store/useFilterStore';
 import { Transaction, KPIData, ChartData, TimeSeriesData } from '../types';
-import { isWithinInterval, format, subDays, parseISO } from 'date-fns';
+import { isWithinInterval, format, subDays, parseISO, getHours } from 'date-fns';
 
 export const useTransactionData = () => {
   const { dateRange, barangays, categories, brands, stores } = useFilterStore();
@@ -166,6 +166,56 @@ export const useTransactionData = () => {
     })).sort((a, b) => b.value - a.value);
   }, [filteredTransactions]);
 
+  const hourlyTrends = useMemo(() => {
+    const hourlyRevenue = new Map<number, number>();
+    
+    // Initialize all hours with 0
+    for (let i = 0; i < 24; i++) {
+      hourlyRevenue.set(i, 0);
+    }
+    
+    filteredTransactions.forEach(transaction => {
+      const hour = getHours(parseISO(transaction.created_at));
+      hourlyRevenue.set(hour, (hourlyRevenue.get(hour) || 0) + transaction.total_amount);
+    });
+
+    return Array.from(hourlyRevenue.entries()).map(([hour, revenue]) => ({
+      hour: hour.toString().padStart(2, '0') + ':00',
+      revenue,
+      transactions: Math.floor(revenue / 100) // Mock transaction count
+    })).sort((a, b) => parseInt(a.hour) - parseInt(b.hour));
+  }, [filteredTransactions]);
+
+  const ageDistribution = useMemo(() => {
+    const ageGroups = new Map<string, number>();
+    
+    filteredTransactions.forEach(transaction => {
+      const ageGroup = transaction.customer.age_group;
+      ageGroups.set(ageGroup, (ageGroups.get(ageGroup) || 0) + transaction.total_amount);
+    });
+
+    return Array.from(ageGroups.entries()).map(([age_group, revenue]) => ({
+      age_group,
+      revenue,
+      count: Math.floor(revenue / 50) // Mock customer count
+    }));
+  }, [filteredTransactions]);
+
+  const genderDistribution = useMemo(() => {
+    const genderGroups = new Map<string, number>();
+    
+    filteredTransactions.forEach(transaction => {
+      const gender = transaction.customer.gender === 'M' ? 'Male' : 'Female';
+      genderGroups.set(gender, (genderGroups.get(gender) || 0) + transaction.total_amount);
+    });
+
+    return Array.from(genderGroups.entries()).map(([gender, revenue]) => ({
+      gender,
+      revenue,
+      count: Math.floor(revenue / 50) // Mock customer count
+    }));
+  }, [filteredTransactions]);
+
   return {
     transactions: filteredTransactions,
     kpiData,
@@ -173,5 +223,8 @@ export const useTransactionData = () => {
     brandData,
     timeSeriesData,
     storeData,
+    hourlyTrends,
+    ageDistribution,
+    genderDistribution,
   };
 };
