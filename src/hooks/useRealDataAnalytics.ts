@@ -76,8 +76,11 @@ export function useRealDataAnalytics(filters: FilterState) {
         p_stores: filters.stores.length > 0 ? filters.stores : null
       }
 
-      // Fetch all analytics data in parallel using simplified filters
-      const filters = {};
+      // Fetch all analytics data in parallel
+      // Note: Some functions use filters object, others use date parameters
+      const filterObj = {};
+      const startDate = filters.dateRange.from || null;
+      const endDate = filters.dateRange.to || null;
 
       const [
         dashboardSummary,
@@ -88,13 +91,16 @@ export function useRealDataAnalytics(filters: FilterState) {
         categoryMetrics,
         dailyTrends
       ] = await Promise.all([
-        supabase.rpc('get_dashboard_summary', { filters }),
-        supabase.rpc('get_age_distribution_simple', { filters }),
-        supabase.rpc('get_gender_distribution_simple', { filters }),
-        supabase.rpc('get_location_distribution', { filters }),
-        supabase.rpc('get_brand_performance', { filters }),
-        supabase.rpc('get_product_categories_summary', { filters }),
-        supabase.rpc('get_daily_trends', { filters })
+        supabase.rpc('get_dashboard_summary', { filters: filterObj }),
+        supabase.rpc('get_age_distribution_simple', { 
+          p_start_date: startDate,
+          p_end_date: endDate 
+        }),
+        supabase.rpc('get_gender_distribution_simple', { filters: filterObj }),
+        supabase.rpc('get_location_distribution', { filters: filterObj }),
+        supabase.rpc('get_brand_performance', { filters: filterObj }),
+        supabase.rpc('get_product_categories_summary', { filters: filterObj }),
+        supabase.rpc('get_daily_trends', { filters: filterObj })
       ])
 
       // Check for errors
