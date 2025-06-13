@@ -120,17 +120,44 @@ jobs:
           
       - name: Start preview server and wait
         run: |
-          npm run preview &
-          npx wait-on http://localhost:4173 --timeout 60000
+          echo "Starting preview server..."
+          npm run preview > server.log 2>&1 &
+          SERVER_PID=$!
+          echo "Server PID: $SERVER_PID"
+          echo "Waiting for server to start..."
+          sleep 5
+          echo "Extracting server URL from logs..."
+          PREVIEW_URL=$(grep "Local:" server.log | sed -n 's/.*Local:[[:space:]]*\([^[:space:]]*\).*/\1/p' | head -1)
+          echo "Preview URL: $PREVIEW_URL"
+          if [ -z "$PREVIEW_URL" ]; then
+            echo "Failed to extract preview URL, using default http://localhost:4173"
+            PREVIEW_URL="http://localhost:4173"
+          fi
+          echo "PREVIEW_URL=$PREVIEW_URL" >> $GITHUB_ENV
+          echo "Waiting for server to become ready at $PREVIEW_URL..."
+          npx wait-on "$PREVIEW_URL" --timeout 180000 --interval 2000 --verbose
         env:
           CI: true
           VITE_SUPABASE_URL: https://test.supabase.co
           VITE_SUPABASE_ANON_KEY: test-key
           
+      - name: Debug server status
+        if: always()
+        run: |
+          echo "=== Server Logs ==="
+          cat server.log || echo "No server log found"
+          echo "=== Port Status ==="
+          netstat -tulpn | grep -E "41(73|74|75)" || echo "Vite ports not found"
+          echo "=== Process Status ==="
+          ps aux | grep vite || echo "No vite processes found"
+          echo "=== Health Check ==="
+          echo "Testing URL: ${{ env.PREVIEW_URL }}"
+          curl -v "${{ env.PREVIEW_URL }}" || echo "Health check failed"
+          
       - name: Run E2E tests
         run: npx playwright test --project=chromium
         env:
-          BASE_URL: http://localhost:4173
+          BASE_URL: ${{ env.PREVIEW_URL }}
           
       - name: Upload Playwright report
         uses: actions/upload-artifact@v4
@@ -169,12 +196,39 @@ jobs:
           
       - name: Start preview server and wait
         run: |
-          npm run preview &
-          npx wait-on http://localhost:4173 --timeout 60000
+          echo "Starting preview server for accessibility tests..."
+          npm run preview > accessibility-server.log 2>&1 &
+          SERVER_PID=$!
+          echo "Server PID: $SERVER_PID"
+          echo "Waiting for server to start..."
+          sleep 5
+          echo "Extracting server URL from logs..."
+          ACCESSIBILITY_PREVIEW_URL=$(grep "Local:" accessibility-server.log | sed -n 's/.*Local:[[:space:]]*\([^[:space:]]*\).*/\1/p' | head -1)
+          echo "Accessibility Preview URL: $ACCESSIBILITY_PREVIEW_URL"
+          if [ -z "$ACCESSIBILITY_PREVIEW_URL" ]; then
+            echo "Failed to extract preview URL, using default http://localhost:4173"
+            ACCESSIBILITY_PREVIEW_URL="http://localhost:4173"
+          fi
+          echo "ACCESSIBILITY_PREVIEW_URL=$ACCESSIBILITY_PREVIEW_URL" >> $GITHUB_ENV
+          echo "Waiting for server to become ready at $ACCESSIBILITY_PREVIEW_URL..."
+          npx wait-on "$ACCESSIBILITY_PREVIEW_URL" --timeout 180000 --interval 2000 --verbose
         env:
           CI: true
           VITE_SUPABASE_URL: https://test.supabase.co
           VITE_SUPABASE_ANON_KEY: test-key
+          
+      - name: Debug accessibility server status
+        if: always()
+        run: |
+          echo "=== Accessibility Server Logs ==="
+          cat accessibility-server.log || echo "No accessibility server log found"
+          echo "=== Port Status ==="
+          netstat -tulpn | grep -E "41(73|74|75)" || echo "Vite ports not found"
+          echo "=== Process Status ==="
+          ps aux | grep vite || echo "No vite processes found"
+          echo "=== Health Check ==="
+          echo "Testing URL: ${{ env.ACCESSIBILITY_PREVIEW_URL }}"
+          curl -v "${{ env.ACCESSIBILITY_PREVIEW_URL }}" || echo "Health check failed"
           
       - name: Run Lighthouse CI
         run: |
