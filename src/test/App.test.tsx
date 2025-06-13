@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
-import { BrowserRouter } from 'react-router-dom'
+import { MemoryRouter } from 'react-router-dom'
 import App from '../App'
 
 // Mock the charts to avoid canvas issues in tests
@@ -41,9 +41,9 @@ vi.mock('../lib/supabase', () => ({
 
 function AppWrapper() {
   return (
-    <BrowserRouter>
+    <MemoryRouter>
       <App />
-    </BrowserRouter>
+    </MemoryRouter>
   )
 }
 
