@@ -5,7 +5,7 @@ export default defineConfig({
   timeout: 30_000,
   reporter: 'list',
   use: {
-    baseURL: 'http://127.0.0.1:5173',
+    baseURL: 'http://127.0.0.1:4173',
     headless: true,
     viewport: { width: 1280, height: 720 },
     trace: 'on-first-retry',
@@ -17,7 +17,8 @@ export default defineConfig({
   ],
   webServer: {
     command: 'npm run preview',
-    url: 'http://127.0.0.1:5173',
+    url: 'http://127.0.0.1:4173',
+    timeout: 120_000,
     reuseExistingServer: !process.env.CI,
   },
 });
