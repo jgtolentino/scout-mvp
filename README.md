@@ -1,25 +1,44 @@
-# Scout Analytics MVP - Retail Intelligence Dashboard
+# Scout Analytics MVP
 
-A comprehensive retail analytics dashboard built with React, TypeScript, and Supabase, designed for the Philippine retail market.
+> Retail intelligence dashboard for the Philippine market
 
-## Features
+A production-ready analytics dashboard built with React, TypeScript, and Supabase, featuring real-time insights, demographic analytics, and AI-powered recommendations.
 
-- **Executive Dashboard**: Real-time KPIs and insights
-- **Transaction Trends**: Temporal and regional analysis
-- **Product Mix Analysis**: Category and brand performance
-- **Consumer Insights**: Demographics and behavioral analysis
-- **AI-Powered Insights**: Automated recommendations and alerts
-- **Advanced Filtering**: Multi-dimensional data filtering
-- **Responsive Design**: Optimized for all devices
+## ✨ Features
 
-## Tech Stack
+- 📊 **Executive Dashboard** - Real-time KPIs and performance metrics
+- 📈 **Transaction Trends** - Temporal and regional analysis  
+- 🛍️ **Product Mix Analysis** - Category and brand performance
+- 👥 **Consumer Insights** - Demographics and behavioral patterns
+- 🤖 **AI-Powered Insights** - Azure OpenAI integration
+- 🎯 **Advanced Filtering** - Multi-dimensional data filtering
+- 📱 **Responsive Design** - Optimized for all devices
 
-- **Frontend**: React 18, TypeScript, Tailwind CSS
-- **Charts**: Recharts
-- **State Management**: Zustand
-- **Database**: Supabase (PostgreSQL)
-- **Build Tool**: Vite
-- **Icons**: Lucide React
+## 🚀 Quick Start
+
+```bash
+git clone https://github.com/jgtolentino/scout-mvp.git
+cd scout-mvp
+npm install
+
+# Setup database (one command)
+export SUPABASE_DB_URL="postgres://postgres:YOUR_PASSWORD@db.YOUR_PROJECT_REF.supabase.co:5432/postgres"
+./fix_all.sh
+
+# Start development
+npm run dev
+```
+
+[📖 Full documentation](./docs/) | [🔧 Installation guide](./docs/quick-start.md)
+
+## 🏗️ Tech Stack
+
+- **Frontend**: React 18, TypeScript, Tailwind CSS, Vite
+- **Charts**: Recharts with interactive visualizations
+- **State**: Zustand with URL persistence
+- **Database**: Supabase (PostgreSQL + RLS + Real-time)
+- **AI**: Azure OpenAI for insights generation
+- **Testing**: Vitest + Playwright + Testing Library
 
 ## Database Setup
 
@@ -29,14 +48,30 @@ A comprehensive retail analytics dashboard built with React, TypeScript, and Sup
 2. Wait for the project to be fully initialized
 3. Note your project URL and anon key
 
-### 2. Run Database Migrations
+### 2. Run Database Migrations (Automated)
 
-Execute the following SQL files in order in your Supabase SQL Editor:
+**Quick automated setup (recommended):**
 
-1. `supabase/migrations/create_retail_analytics_schema.sql` - Creates tables and security policies
-2. `supabase/migrations/insert_sample_data.sql` - Inserts brands, products, stores, and customers
-3. `supabase/migrations/create_analytics_functions.sql` - Creates analytics functions
-4. `supabase/migrations/generate_transaction_data.sql` - Generates realistic transaction data
+```bash
+# Set your database URL
+export SUPABASE_DB_URL="postgres://postgres:YOUR_PASSWORD@db.YOUR_PROJECT_REF.supabase.co:5432/postgres"
+
+# Run the automated fix
+./fix_all.sh
+
+# Verify everything worked
+./verify_fix.sh
+```
+
+This automatically:
+- ✅ Fixes function overloads
+- ✅ Adds demographic columns
+- ✅ Enables Row-Level Security
+- ✅ Populates 5000 transactions with data
+
+**Manual setup (alternative):**
+
+If you prefer manual setup, see `MIGRATION_GUIDE.md` for SQL to run in Supabase SQL Editor.
 
 ### 3. Configure Environment Variables
 
@@ -45,6 +80,10 @@ Create a `.env` file in the root directory:
 ```env
 VITE_SUPABASE_URL=your_supabase_project_url
 VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+
+# For AI Insights (optional)
+AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com/
+AZURE_OPENAI_API_KEY=your_azure_api_key
 ```
 
 ## Local Development
