@@ -92,10 +92,7 @@ export function useRealDataAnalytics(filters: FilterState) {
         dailyTrends
       ] = await Promise.all([
         supabase.rpc('get_dashboard_summary', { filters: filterObj }),
-        supabase.rpc('get_age_distribution_simple', { 
-          p_start_date: startDate,
-          p_end_date: endDate 
-        }),
+        supabase.rpc('get_age_distribution_simple', { filters: filterObj }),
         supabase.rpc('get_gender_distribution_simple', { filters: filterObj }),
         supabase.rpc('get_location_distribution', { filters: filterObj }),
         supabase.rpc('get_brand_performance', { filters: filterObj }),
