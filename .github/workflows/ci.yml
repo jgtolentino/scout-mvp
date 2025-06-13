@@ -106,8 +106,11 @@ jobs:
       - name: Install dependencies
         run: npm ci
         
+      - name: Install wait-on for server startup detection
+        run: npm install --save-dev wait-on
+        
       - name: Install Playwright browsers
-        run: npx playwright install --with-deps
+        run: npx playwright install --with-deps chromium
         
       - name: Download build artifacts
         uses: actions/download-artifact@v4
@@ -115,19 +118,27 @@ jobs:
           name: dist
           path: dist/
           
-      - name: Run E2E tests
-        run: npm run e2e
+      - name: Start preview server and wait
+        run: |
+          npm run preview &
+          npx wait-on http://localhost:4173 --timeout 60000
         env:
+          CI: true
           VITE_SUPABASE_URL: https://test.supabase.co
           VITE_SUPABASE_ANON_KEY: test-key
           
+      - name: Run E2E tests
+        run: npx playwright test --project=chromium
+        env:
+          BASE_URL: http://localhost:4173
+          
       - name: Upload Playwright report
         uses: actions/upload-artifact@v4
-        if: failure()
+        if: always()
         with:
-          name: playwright-report
+          name: e2e-playwright-report
           path: playwright-report/
-          retention-days: 7
+          retention-days: 30
 
   accessibility:
     name: Accessibility Check
@@ -147,27 +158,38 @@ jobs:
       - name: Install dependencies
         run: npm ci
         
+      - name: Install wait-on for server startup detection
+        run: npm install --save-dev wait-on
+        
       - name: Download build artifacts
         uses: actions/download-artifact@v4
         with:
           name: dist
           path: dist/
           
-      - name: Serve application
-        run: npm run preview &
+      - name: Start preview server and wait
+        run: |
+          npm run preview &
+          npx wait-on http://localhost:4173 --timeout 60000
         env:
+          CI: true
           VITE_SUPABASE_URL: https://test.supabase.co
           VITE_SUPABASE_ANON_KEY: test-key
           
-      - name: Wait for server
-        run: npx wait-on http://127.0.0.1:4173 --timeout 30000
-        
       - name: Run Lighthouse CI
         run: |
           npm install -g @lhci/cli@0.12.x
           lhci autorun
         env:
           LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
+          
+      - name: Upload Lighthouse report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lighthouse-report
+          path: .lighthouseci/
+          retention-days: 30
 
   security:
     name: Security Scan
