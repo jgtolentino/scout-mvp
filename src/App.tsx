@@ -22,19 +22,15 @@ function App() {
       </div>
       
       <div className="flex">
-        <div className="sidebar">
-          <Sidebar />
-        </div>
+        <Sidebar />
         
         <main className="flex-1 lg:ml-64 p-6">
-          <div className="dashboard-grid">
-            <Routes>
-              <Route path="/" element={<Overview />} />
-              <Route path="/trends" element={<TransactionTrends />} />
-              <Route path="/products" element={<ProductMix />} />
-              <Route path="/consumers" element={<ConsumerInsights />} />
-            </Routes>
-          </div>
+          <Routes>
+            <Route path="/" element={<Overview />} />
+            <Route path="/trends" element={<TransactionTrends />} />
+            <Route path="/products" element={<ProductMix />} />
+            <Route path="/consumers" element={<ConsumerInsights />} />
+          </Routes>
         </main>
       </div>
     </div>

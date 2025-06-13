@@ -83,14 +83,7 @@ body {
   font-size: clamp(0.75rem, 1.5vw, 1rem);
 }
 
-/* Responsive grid scaling */
-.dashboard-grid {
-  display: grid;
-  gap: var(--spacing-unit);
-  
-  /* Responsive grid columns */
-  grid-template-columns: repeat(auto-fit, minmax(clamp(250px, 30vw, 400px), 1fr));
-}
+/* Responsive grid scaling - removed problematic dashboard-grid */
 
 .kpi-grid {
   display: grid;
@@ -100,8 +93,7 @@ body {
 
 /* Sidebar responsive scaling */
 .sidebar {
-  width: clamp(200px, 20vw, 280px);
-  
+  /* Don't override the sidebar width - let Tailwind handle it */
   @media (max-width: 1024px) {
     width: 100%;
     position: relative;
