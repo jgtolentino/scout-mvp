@@ -24,7 +24,10 @@ const Sidebar: React.FC = () => {
   ];
 
   return (
-    <div className="hidden lg:flex lg:flex-col lg:w-64 lg:fixed lg:inset-y-0 lg:bg-white lg:border-r lg:border-gray-200 lg:shadow-sm">
+    <nav 
+      className="hidden lg:flex lg:flex-col lg:w-64 lg:fixed lg:inset-y-0 lg:bg-white lg:border-r lg:border-gray-200 lg:shadow-sm"
+      aria-label="Main navigation"
+    >
       {/* Header */}
       <div className="flex items-center justify-between p-6 border-b border-gray-200">
         <div className="flex items-center space-x-2">
@@ -96,7 +99,7 @@ const Sidebar: React.FC = () => {
           </button>
         </div>
       </div>
-    </div>
+    </nav>
   );
 };
 
