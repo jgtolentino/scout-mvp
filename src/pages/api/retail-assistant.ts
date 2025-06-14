@@ -183,10 +183,10 @@ function generateFallbackResponse(message: string, context: any): string {
 • Active Customers: 995
 
 ${filters.regions?.length > 0 ? `**Regional Focus (${filters.regions.join(', ')}):**
-Selected regions show strong FMCG performance with premium brand preference.` : '**Regional Breakdown:**
+Selected regions show strong FMCG performance with premium brand preference.` : `**Regional Breakdown:**
 • NCR: 35% of total revenue (₱425K+)
 • CALABARZON: 18% (₱218K+)
-• Central Luzon: 14% (₱170K+)'}
+• Central Luzon: 14% (₱170K+)`}
 
 **Top Categories:**
 🧃 Beverages: 28% share

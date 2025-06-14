@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Calendar, MapPin, Store, Tag, Package, RotateCcw, ChevronDown, X } from 'lucide-react';
+import { RotateCcw, ChevronDown, X } from 'lucide-react';
 import { useFilterStore } from '@/hooks/useFilterStore';
 import { DateRangeFilter } from './DateRangeFilter';
 import { RegionFilter } from './RegionFilter';

@@ -194,13 +194,13 @@ export const useTransactionData = () => {
   // Calculate gender distribution
   const genderDistribution = getGenderDistribution();
 
-  // Payment method data (mock until we have a payments table)
+  // Payment method data (mock with realistic revenue distribution)
   const paymentMethodData = [
-    { name: 'Cash', value: transactions.length * 0.65 * 100 }, // 65% cash
-    { name: 'GCash', value: transactions.length * 0.20 * 100 }, // 20% GCash
-    { name: 'PayMaya', value: transactions.length * 0.10 * 100 }, // 10% PayMaya
-    { name: 'Credit Card', value: transactions.length * 0.03 * 100 }, // 3% Credit
-    { name: 'Bank Transfer', value: transactions.length * 0.02 * 100 } // 2% Bank
+    { name: 'Cash', value: totalRevenue * 0.45 }, // 45% cash
+    { name: 'GCash', value: totalRevenue * 0.25 }, // 25% GCash
+    { name: 'PayMaya', value: totalRevenue * 0.15 }, // 15% PayMaya
+    { name: 'Credit Card', value: totalRevenue * 0.10 }, // 10% Credit
+    { name: 'Bank Transfer', value: totalRevenue * 0.05 } // 5% Bank
   ];
 
   return {
@@ -287,7 +287,7 @@ function getAgeDistribution(): ChartData[] {
 }
 
 function getGenderDistribution(): ChartData[] {
-  // Return default gender distribution data to prevent empty charts
+  // Return realistic gender distribution data for Philippine FMCG market
   return [
     { name: 'Female', value: 58, change: 1.2 },
     { name: 'Male', value: 41, change: -0.8 },

@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-var-requires */
+ 
 
 import dataset from '../../fmcg_dataset_5000_realistic.json';
 
