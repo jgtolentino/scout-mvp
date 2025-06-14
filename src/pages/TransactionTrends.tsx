@@ -51,7 +51,7 @@ const TransactionTrends: React.FC = () => {
   }));
 
   const hourlyData = hourlyTrends.length > 0 ? hourlyTrends.map(item => ({
-    name: `${item.hour}:00`,
+    name: `${item.hour || 0}:00`,
     value: item.total_revenue || item.value || 0
   })) : Array.from({ length: 24 }, (_, i) => ({
     name: `${i}:00`,

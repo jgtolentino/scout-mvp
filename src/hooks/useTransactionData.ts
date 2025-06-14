@@ -193,6 +193,15 @@ export const useTransactionData = () => {
   // Calculate gender distribution
   const genderDistribution = getGenderDistribution();
 
+  // Payment method data (mock until we have a payments table)
+  const paymentMethodData = [
+    { name: 'Cash', value: transactions.length * 0.65 * 100 }, // 65% cash
+    { name: 'GCash', value: transactions.length * 0.20 * 100 }, // 20% GCash
+    { name: 'PayMaya', value: transactions.length * 0.10 * 100 }, // 10% PayMaya
+    { name: 'Credit Card', value: transactions.length * 0.03 * 100 }, // 3% Credit
+    { name: 'Bank Transfer', value: transactions.length * 0.02 * 100 } // 2% Bank
+  ];
+
   return {
     transactions,
     kpiData,
@@ -203,6 +212,7 @@ export const useTransactionData = () => {
     hourlyTrends,
     ageDistribution,
     genderDistribution,
+    paymentMethodData,
     loading,
     error,
   };
@@ -248,7 +258,9 @@ function getHourlyTrends(transactions: Transaction[]): ChartData[] {
   
   transactions.forEach(transaction => {
     if (transaction.transaction_date) {
-      const hour = new Date(transaction.transaction_date).getHours();
+      // Convert to Philippines timezone (UTC+8)
+      const date = new Date(transaction.transaction_date);
+      const hour = (date.getUTCHours() + 8) % 24;
       if (!isNaN(hour) && hour >= 0 && hour < 24) {
         hourlyData[hour] = (hourlyData[hour] || 0) + (transaction.total_amount || 0);
       }

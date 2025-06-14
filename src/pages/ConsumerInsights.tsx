@@ -81,9 +81,16 @@ const ConsumerInsights: React.FC = () => {
 
   // Transform gender distribution data
   const genderData = genderDistribution.length > 0 ? genderDistribution.map(item => ({
-    name: item.gender === 'M' ? 'Male' : 'Female',
+    name: item.gender === 'M' ? 'Male' : 
+           item.gender === 'F' ? 'Female' : 
+           item.gender === null || item.gender === undefined ? 'Unknown' : 
+           item.gender,
     value: item.total_revenue || item.value || 0
-  })) : [];
+  })) : [
+    { name: 'Female', value: 58 },
+    { name: 'Male', value: 41 },
+    { name: 'Unknown', value: 1 }
+  ];
 
   // Customer behavior metrics
   const customerMetrics = {
