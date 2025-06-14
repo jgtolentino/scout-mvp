@@ -7,6 +7,7 @@ import Overview from './pages/Overview';
 import TransactionTrends from './pages/TransactionTrends';
 import ProductMix from './pages/ProductMix';
 import ConsumerInsights from './pages/ConsumerInsights';
+import ChatLauncher from './components/chat/ChatLauncher';
 
 function App() {
   const { initializeFromURL } = useFilterStore();
@@ -33,6 +34,9 @@ function App() {
           </Routes>
         </main>
       </div>
+      
+      {/* Global chat widget */}
+      <ChatLauncher />
     </div>
   );
 }

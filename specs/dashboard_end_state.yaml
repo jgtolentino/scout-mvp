@@ -7,6 +7,7 @@
 meta:
   dashboard_id: scout-analytics-mvp
   name: "Scout Analytics – Philippine Retail Intelligence"
+  og_image: "/og-card.png"          # Pulser / CI picks this up
   route: "/"
   owner: pulser/edge
   status: production-ready
@@ -222,6 +223,7 @@ components:
       max_height: 24rem
       width: 20rem
       z_index: 50
+      avatar_url: "/assets/cookie-bot.svg"
 
 # ───────────────────────── Pages ───────────────────────────
 
