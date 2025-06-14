@@ -11,6 +11,7 @@ import ConsumerInsights from './pages/ConsumerInsights';
 import Chat from './pages/Chat';
 import AllTransactions from './pages/AllTransactions';
 import YummyDashboard from './pages/YummyDashboard';
+import LearnBot from './pages/LearnBot';
 import PersistentChatWidget from './components/chat/PersistentChatWidget';
 
 function App() {
@@ -46,6 +47,7 @@ function App() {
               <Route path="/transactions" element={<AllTransactions />} />
               <Route path="/chat" element={<Chat />} />
               <Route path="/yummy" element={<YummyDashboard />} />
+              <Route path="/learn" element={<LearnBot />} />
             </Routes>
           </main>
         </div>

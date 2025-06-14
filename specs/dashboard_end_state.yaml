@@ -519,6 +519,40 @@ pages:
     stream    : true
   layout: { col_span: 4, min_height: 32rem }
 
+## ---- LEARNBOT ----------------------------------------------------
+- id   : learnbot_panel
+  type : interactive_tutorial
+  title: "LearnBot Interactive Tutorial"
+  props:
+    steps_source: "ai/learnbot_steps.md"
+    enable_code_walkthrough: true
+    enable_voice_mode: true
+    tutorial_theme: "tbwa"
+    auto_progress: false
+    completion_tracking: true
+  layout: { col_span: 3, min_height: 28rem }
+
+- id   : tutorial_tracker
+  type : progress_bar
+  title: "Learning Progress"
+  props:
+    linked_to: "learnbot_panel"
+    show_completion_percentage: true
+    show_step_indicators: true
+    achievements_enabled: true
+  layout: { col_span: 1, min_height: 12rem }
+
+- id   : interactive_walkthrough
+  type : guided_tour
+  title: "Dashboard Walkthrough"
+  props:
+    tour_config: "ai/walkthrough_config.json"
+    highlight_elements: true
+    show_tooltips: true
+    enable_spotlight: true
+    voice_narration: true
+  layout: { col_span: 4, min_height: 20rem }
+
 # ================================================================
 #  ENHANCED FILTER SYSTEM – UI/UX Optimized Design
 # ================================================================

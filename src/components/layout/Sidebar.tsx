@@ -10,7 +10,8 @@ import {
   RefreshCw,
   MessageCircle,
   Database,
-  Star
+  Star,
+  GraduationCap
 } from 'lucide-react';
 import { useFilterStore } from '../../store/useFilterStore';
 import { clsx } from 'clsx';
@@ -28,6 +29,7 @@ const Sidebar: React.FC = () => {
     { name: 'All Transactions', href: '/transactions', icon: Database, description: 'Complete records (5K)' },
     { name: 'Chat', href: '/chat', icon: MessageCircle, description: 'Scout AI Assistant', isPremium: true },
     { name: 'Yummy Intelligence', href: '/yummy', icon: Star, description: 'FMCG Intelligence Agent', isPremium: true },
+    { name: 'LearnBot Tutorial', href: '/learn', icon: GraduationCap, description: 'Interactive Learning System', isPremium: true },
   ];
 
   return (
