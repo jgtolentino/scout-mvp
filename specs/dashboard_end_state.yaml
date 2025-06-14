@@ -15,9 +15,14 @@ meta:
     platform : vercel
     build_cmd: "npm run build"
     deploy_cmd: "vercel --prod --yes"
-    last_deployed: "2025-06-14T15:30:00Z"
-    commit_hash  : "1e012c3"
+    last_deployed: "2025-06-14T16:15:00Z"
+    commit_hash  : "4a9f6a0"
     branch_merged: "feature/enhanced-kpi-dashboard → main"
+  demo_mode:
+    enabled: true
+    activation: "VITE_SCOUT_DEMO=on"
+    dataset: "5000 realistic FMCG transactions in-memory"
+    no_backend_required: true
 
 data_sources:
   - supabase[transactions_fmcg]
@@ -515,6 +520,9 @@ snapshot:
     - "✅ Responsive scaling with proper zoom functionality"
     - "✅ Database functions and RPC endpoints working"
     - "✅ Supabase client .distinct() API issue resolved"
+    - "✅ Demo mode with in-memory dataset (zero backend)"
+    - "✅ Auto-issue creation for CI/CD failures"
+    - "✅ Dual AI agent audit pipeline (dash + caca)"
   verification_urls:
     - "https://scout-mvp.vercel.app (main dashboard)"
     - "https://scout-mvp.vercel.app/chat (AI chat interface)"

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
+import { getDataProvider } from '../lib/dataProvider';
 
 interface DataAuditResult {
   // Record counts
@@ -60,6 +60,8 @@ export const useDataAudit = () => {
 
     try {
       console.log('[Data Audit] Starting comprehensive data audit...');
+      
+      const db = getDataProvider();
 
       // 1. Get record counts from all tables
       const [
@@ -69,15 +71,15 @@ export const useDataAudit = () => {
         storeCount,
         brandCount
       ] = await Promise.all([
-        supabase.from('transactions_fmcg').select('*', { count: 'exact', head: true }),
-        supabase.from('customers').select('*', { count: 'exact', head: true }),
-        supabase.from('products').select('*', { count: 'exact', head: true }),
-        supabase.from('stores').select('*', { count: 'exact', head: true }),
-        supabase.from('brands').select('*', { count: 'exact', head: true })
+        db.from('transactions_fmcg').select('*', { count: 'exact', head: true }),
+        db.from('customers').select('*', { count: 'exact', head: true }),
+        db.from('products').select('*', { count: 'exact', head: true }),
+        db.from('stores').select('*', { count: 'exact', head: true }),
+        db.from('brands').select('*', { count: 'exact', head: true })
       ]);
 
       // 2. Get transaction data for validation
-      const { data: transactions } = await supabase
+      const { data: transactions } = await db
         .from('transactions_fmcg')
         .select('id, total_amount, transaction_date, customer_id, store_id');
 
@@ -89,7 +91,7 @@ export const useDataAudit = () => {
       const calculatedTotal = transactions.reduce((sum, t) => sum + (t.total_amount || 0), 0);
       
       // Get database aggregate
-      const { data: aggregateData } = await supabase
+      const { data: aggregateData } = await db
         .from('transactions_fmcg')
         .select('total_amount.sum()');
 
@@ -125,7 +127,7 @@ export const useDataAudit = () => {
       qualityScore = Math.max(0, Math.round(qualityScore));
 
       // 8. Get category and brand distribution
-      const { data: categoryData } = await supabase
+      const { data: categoryData } = await db
         .from('transaction_items_fmcg')
         .select(`
           products!inner (
@@ -133,7 +135,7 @@ export const useDataAudit = () => {
           )
         `);
 
-      const { data: brandData } = await supabase
+      const { data: brandData } = await db
         .from('transaction_items_fmcg')
         .select(`
           products!inner (

@@ -17,6 +17,11 @@ function App() {
     initializeFromURL();
   }, [initializeFromURL]);
 
+  useEffect(() => {
+    // Test audit bot - will be removed before merge
+    console.error('audit-smoke');
+  }, []);
+
   return (
     <div className="dashboard-container min-h-screen bg-gray-50">
       <div className="filter-bar">
