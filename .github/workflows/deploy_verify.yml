@@ -55,6 +55,19 @@ jobs:
             qa-errors.json
             screenshot.png
 
+      - name: Slack alert on audit failure
+        if: steps.audit.outputs.has_errors == 'true'
+        uses: 8398a7/action-slack@v4
+        with:
+          status: failure
+          author_name: Scout CI
+          fields: repo,commit,workflow
+          text: |
+            🚨 *Deployment audit failed* for `${{ steps.vercel.outputs.preview-url }}`  
+            See issue → <https://github.com/${{ github.repository }}/issues?q=is%3Aopen+Deployment+audit+failed>
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
       - name: Fail if errors detected
         if: steps.dash.outputs.has_errors == 'true' || steps.caca.outputs.has_errors == 'true'
         run: |

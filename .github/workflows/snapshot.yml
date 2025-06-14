@@ -1,0 +1,27 @@
+name: Nightly KPI snapshot
+
+on:
+  schedule:
+    - cron: '0 17 * * *'   # 01:00 PH time
+  workflow_dispatch:
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - run: npm ci
+      - run: npx ts-node ci/update_snapshot.ts
+        env:
+          SUPABASE_URL:             ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      - name: Commit snapshot if changed
+        run: |
+          git diff --quiet || {
+            git config user.name  "snapshot-bot"
+            git config user.email "ci@bot"
+            git commit -am "🤖 nightly snapshot refresh"
+            git push
+          } 
