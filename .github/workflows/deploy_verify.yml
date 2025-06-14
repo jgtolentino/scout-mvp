@@ -1,0 +1,111 @@
+name: Deploy & Verify
+
+on:
+  push:
+    branches: [ main, feature/** ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # --- Scout Analytics build and deploy pipeline -----------------
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Build Scout Analytics
+        run: npm run build
+        
+      - name: Vercel Deploy
+        id: vercel
+        run: |
+          DEPLOY_URL=$(vercel --prod --yes)
+          echo "preview-url=$DEPLOY_URL" >> $GITHUB_OUTPUT
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+
+      # -------------------------------------------------------
+      # AI Agent – Headless audit of the fresh deployment
+      # -------------------------------------------------------
+      - name: Install Playwright
+        run: npx playwright install --with-deps chromium
+
+      - name: Run headless audit
+        id: audit
+        run: node ci/audit_deploy.js "${{ steps.vercel.outputs.preview-url }}"
+
+      - name: Upload artefacts
+        if: success() || failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: audit-output-${{ github.run_number }}
+          path: |
+            audit-logs.json
+            screenshot.png
+
+      - name: Fail if console errors
+        if: steps.audit.outputs.has_errors == 'true'
+        run: |
+          echo "::error::Console errors detected – see artefacts";
+          exit 1
+
+      # -------------------------------------------------------
+      # Auto-file a GitHub issue so the bug lands on someone's
+      # board immediately
+      # -------------------------------------------------------
+      - name: Create / update "Deployment Audit Failure" issue
+        if: failure() && steps.audit.outputs.has_errors == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TIMESTAMP=$(date -u +'%Y-%m-%d %H:%M UTC')
+          BODY_FILE=$(mktemp)
+          
+          echo "### 🛑 Scout Analytics deployment audit failed – ${TIMESTAMP}"           >  "$BODY_FILE"
+          echo ""                                                                       >> "$BODY_FILE"
+          echo "**URL tested:** ${{ steps.vercel.outputs.preview-url }}"               >> "$BODY_FILE"
+          echo "**Commit:** ${{ github.sha }}"                                         >> "$BODY_FILE"
+          echo "**Branch:** ${{ github.ref_name }}"                                    >> "$BODY_FILE"
+          echo "**Workflow:** [#${{ github.run_number }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})" >> "$BODY_FILE"
+          echo ""                                                                       >> "$BODY_FILE"
+          echo "<details><summary>📊 Console / network errors (click to expand)</summary>" >> "$BODY_FILE"
+          echo ""                                                                       >> "$BODY_FILE"
+          echo '```json'                                                                >> "$BODY_FILE"
+          cat audit-logs.json                                                           >> "$BODY_FILE"
+          echo '```'                                                                    >> "$BODY_FILE"
+          echo "</details>"                                                             >> "$BODY_FILE"
+          echo ""                                                                       >> "$BODY_FILE"
+          echo "**📸 Screenshot** – available in the [Actions artifacts panel](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})." >> "$BODY_FILE"
+          echo ""                                                                       >> "$BODY_FILE"
+          echo "### 🔧 Next Steps"                                                      >> "$BODY_FILE"
+          echo "1. Check the screenshot to see visual state of dashboard"               >> "$BODY_FILE"
+          echo "2. Review console errors above"                                        >> "$BODY_FILE"
+          echo "3. Fix issues in \`src/\` files or database queries"                   >> "$BODY_FILE"
+          echo "4. Test locally with \`npm run audit\`"                                >> "$BODY_FILE"
+          echo "5. Push fix and verify CI passes"                                      >> "$BODY_FILE"
+          echo ""                                                                       >> "$BODY_FILE"
+          echo "_This issue is auto-generated whenever Scout Analytics deployment contains JavaScript errors. Please triage, patch and close once fixed._" >> "$BODY_FILE"
+
+          # create-or-update logic for Scout Analytics
+          gh issue list --search "Scout Analytics deployment audit failed" --label bug --json number,title > issues.json
+          ISSUE_NUMBER=$(jq -r '.[0].number // empty' issues.json)
+
+          if [ -z "$ISSUE_NUMBER" ]; then
+             gh issue create \
+               --title "🚨 Scout Analytics deployment audit failed" \
+               --body-file "$BODY_FILE" \
+               --label bug,deployment,scout-analytics \
+               --assignee "${{ github.repository_owner }}"
+             echo "✅ Created new deployment audit issue"
+          else
+             gh issue comment "$ISSUE_NUMBER" --body-file "$BODY_FILE"
+             gh issue reopen "$ISSUE_NUMBER" 2>/dev/null || true
+             echo "✅ Updated existing deployment audit issue #$ISSUE_NUMBER"
+          fi

@@ -13,7 +13,9 @@
     "test:coverage": "vitest --coverage",
     "e2e": "playwright test",
     "e2e:ui": "playwright test --ui",
-    "preview": "vite preview --host 127.0.0.1 --port 4173"
+    "preview": "vite preview --host 127.0.0.1 --port 4173",
+    "audit": "node ci/audit_deploy.js http://localhost:4173",
+    "audit:prod": "node ci/audit_deploy.js https://scout-4urisgxtr-jakes-projects-e9f46c30.vercel.app"
   },
   "dependencies": {
     "@azure/openai": "^2.0.0",
@@ -49,6 +51,7 @@
     "eslint-plugin-react-refresh": "^0.4.11",
     "globals": "^15.9.0",
     "jsdom": "^23.0.1",
+    "playwright": "^1.53.0",
     "postcss": "^8.4.35",
     "tailwindcss": "^3.4.1",
     "typescript": "^5.5.3",
