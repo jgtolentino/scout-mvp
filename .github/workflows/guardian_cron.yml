@@ -4,6 +4,12 @@ on:
   schedule:
     - cron: '0 2 * * *'  # Run at 02:00 GMT+8 daily
   workflow_dispatch:  # Allow manual triggering
+    inputs:
+      dry:
+        description: 'Run in dry-run mode (do not create GitHub issues)'
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   check-drift:
@@ -14,7 +20,7 @@ jobs:
           curl -X POST \
             -H "Authorization: Bearer ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
             -H "Content-Type: application/json" \
-            "${{ secrets.SUPABASE_URL }}/functions/v1/guardian_drift"
+            "${{ secrets.SUPABASE_URL }}/functions/v1/guardian_drift?dry=${{ github.event.inputs.dry }}"
         
       - name: Check for Drift
         if: failure()
