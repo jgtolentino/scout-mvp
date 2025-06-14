@@ -14,58 +14,52 @@ const KpiRow: React.FC<KpiRowProps> = ({ data }) => {
 
   /* auto-flow keeps six cards per row on ≥1440 px, falls back to wrap */
   return (
-    <div className="grid auto-flow-col auto-cols-max gap-4 overflow-x-auto md:grid-flow-row md:grid-cols-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
       <KpiCard
         title="Total Revenue"
-        value={data.totalRevenue}
+        value={formatCurrency(data.totalRevenue)}
         change={data.revenueChange}
-        icon={DollarSign}
-        formatter={formatCurrency}
+        icon={<DollarSign className="h-5 w-5 text-blue-600" />}
         onClick={() => {}}
       />
       
       <KpiCard
         title="Transactions"
-        value={data.totalTransactions}
+        value={formatNumber(data.totalTransactions)}
         change={data.transactionChange}
-        icon={ShoppingCart}
-        formatter={formatNumber}
+        icon={<ShoppingCart className="h-5 w-5 text-blue-600" />}
         onClick={() => {}}
       />
       
       <KpiCard
         title="Avg Order Value"
-        value={data.avgOrderValue}
+        value={formatCurrency(data.avgOrderValue)}
         change={data.aovChange}
-        icon={TrendingUp}
-        formatter={formatCurrency}
+        icon={<TrendingUp className="h-5 w-5 text-blue-600" />}
         onClick={() => {}}
       />
       
       <KpiCard
         title="Units Sold"
-        value={data.unitsSold}
+        value={formatNumber(data.unitsSold)}
         change={0}
-        icon={Package}
-        formatter={formatNumber}
+        icon={<Package className="h-5 w-5 text-blue-600" />}
         onClick={() => {}}
       />
       
       <KpiCard
         title="Unique Customers"
-        value={data.uniqueCustomers}
+        value={formatNumber(data.uniqueCustomers)}
         change={0}
-        icon={Users}
-        formatter={formatNumber}
+        icon={<Users className="h-5 w-5 text-blue-600" />}
         onClick={() => {}}
       />
       
       <KpiCard
         title="GM %"
-        value={data.grossMarginPct}
+        value={formatPercentage(data.grossMarginPct)}
         change={0}
-        icon={Star}
-        formatter={formatPercentage}
+        icon={<Star className="h-5 w-5 text-blue-600" />}
         onClick={() => {}}
       />
     </div>
