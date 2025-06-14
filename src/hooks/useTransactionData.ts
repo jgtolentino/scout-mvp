@@ -12,7 +12,7 @@ interface Transaction {
   transaction_items?: Array<{
     quantity: number;
     unit_price: number;
-    product?: {
+    products?: {
       unit_cost?: number;
     };
   }>;
@@ -56,7 +56,7 @@ export const useTransactionData = () => {
             transaction_items (
               quantity,
               unit_price,
-              product (
+              products (
                 unit_cost
               )
             )
@@ -143,7 +143,7 @@ export const useTransactionData = () => {
 
   const grossMargin = transactions.reduce((s,t)=>{
     return s + safeArray(t.transaction_items).reduce((x,i)=>{
-      const cost = i.product?.unit_cost ?? 0;
+      const cost = i.products?.unit_cost ?? 0;
       return x + ((i.unit_price ?? 0) - cost) * (i.quantity ?? 0);
     },0);
   },0);
