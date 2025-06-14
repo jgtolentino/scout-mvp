@@ -483,8 +483,10 @@ pages:
   layout: { col_span: 4, min_height: 32rem }
 
 # ================================================================
-#  Global filter schema unchanged – reused from previous revision
+#  ENHANCED FILTER SYSTEM – UI/UX Optimized Design
 # ================================================================
+
+# Global filter schema with enhanced UI/UX
 filters_schema:
   date_range : { from: date|null, to: date|null }
   barangays  : string[]
@@ -492,6 +494,310 @@ filters_schema:
   categories : string[]
   brands     : string[]
   stores     : string[]
+
+# Enhanced Filter UI/UX Components (v2.0 - Production UX Overhaul)
+filter_components:
+  - id: enhanced_global_filter_bar
+    type: filter_bar
+    title: "Global Filters"
+    layout:
+      position: sticky_top
+      container_class: "bg-white border-b border-gray-200 shadow-sm z-50"
+      padding: "px-6 py-4"
+      grid_layout: "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-6 gap-4 mb-4"
+      responsive:
+        desktop: horizontal_grid
+        tablet: wrapped_grid
+        mobile: collapsible_drawer
+    
+    # Active Filter Tags Display
+    active_filters_display:
+      enabled: true
+      position: below_filters
+      container: "flex flex-wrap gap-2 mt-2"
+      tag_style: "bg-blue-100 text-blue-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded dark:bg-blue-900 dark:text-blue-300"
+      remove_button: "ml-1 text-blue-600 hover:text-blue-800 cursor-pointer"
+    components:
+      - id: date_range_filter
+        type: date_range_picker
+        label: "Date Range"
+        grid_column: 1
+        props:
+          preset_options:
+            - { label: "Today", value: "today" }
+            - { label: "Last 7 days", value: "7d" }
+            - { label: "Last 30 days", value: "30d" }
+            - { label: "Last 90 days", value: "90d" }
+            - { label: "YTD", value: "ytd" }
+            - { label: "Custom", value: "custom" }
+          quick_access: true
+          format: "MMM dd, yyyy"
+          shortcuts_visible: true
+        styling:
+          container: "flex flex-col space-y-1"
+          trigger: "bg-gray-50 hover:bg-gray-100 border border-gray-300 rounded-lg px-3 py-2 text-sm font-medium text-gray-700 transition-colors w-full"
+          active: "bg-blue-50 border-blue-300 text-blue-700"
+          label: "text-xs font-medium text-gray-600 mb-1"
+        
+      - id: region_filter
+        type: multi_dropdown_optgroups
+        label: "Region"
+        grid_column: 2
+        data_source: |
+          SELECT region,
+                 CASE 
+                   WHEN region IN ('NCR', 'CALABARZON', 'Central Luzon') THEN 'Luzon'
+                   WHEN region IN ('Western Visayas', 'Central Visayas', 'Eastern Visayas') THEN 'Visayas'
+                   ELSE 'Mindanao'
+                 END as island_group,
+                 COUNT(DISTINCT id) as store_count
+          FROM stores 
+          GROUP BY region, island_group
+          ORDER BY island_group, region
+        props:
+          show_optgroups: true
+          show_counts: true
+          placeholder: "Select Region(s)..."
+          max_display: 2
+        styling:
+          container: "flex flex-col space-y-1"
+          trigger: "bg-gray-50 hover:bg-gray-100 border border-gray-300 rounded-lg px-3 py-2 text-sm text-left w-full"
+          optgroup: "text-xs font-semibold text-gray-500 px-3 py-1 bg-gray-100"
+          option: "px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm"
+          
+      - id: store_filter
+        type: dependent_dropdown
+        label: "Store"
+        grid_column: 3
+        depends_on: ["region_filter"]
+        data_source: |
+          SELECT s.id, s.name, s.region
+          FROM stores s
+          WHERE (:region_filter IS NULL OR s.region = ANY(:region_filter))
+          ORDER BY s.region, s.name
+        props:
+          disabled_when_empty: true
+          placeholder: "Select Store(s)..."
+          show_region_inline: true
+        styling:
+          container: "flex flex-col space-y-1"
+          trigger: "bg-gray-50 hover:bg-gray-100 border border-gray-300 rounded-lg px-3 py-2 text-sm text-left w-full disabled:bg-gray-200 disabled:cursor-not-allowed"
+          option_with_region: "px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm flex justify-between"
+          
+      - id: brand_filter
+        type: searchable_multi_select_pills
+        label: "Brand"
+        grid_column: 4
+        data_source: "SELECT id, name, CASE WHEN name IN ('Oishi', 'Del Monte', 'Champion') THEN true ELSE false END as is_tbwa FROM brands ORDER BY is_tbwa DESC, name"
+        props:
+          search_placeholder: "Search brands..."
+          max_display: 2
+          show_count: true
+          highlight_tbwa: true
+          pill_style: true
+        styling:
+          container: "flex flex-col space-y-1"
+          search_input: "border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full"
+          option: "px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm flex justify-between"
+          option_tbwa: "bg-orange-50 border-l-4 border-orange-400"
+          pill: "bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs"
+          
+      - id: category_filter
+        type: icon_pills
+        label: "Category"
+        grid_column: 5
+        data_source: |
+          SELECT category,
+                 COUNT(*) as product_count,
+                 CASE category
+                   WHEN 'Beverages' THEN '🧃'
+                   WHEN 'Snacks' THEN '🍿'
+                   WHEN 'Dairy' THEN '🥛'
+                   WHEN 'Personal Care' THEN '🧴'
+                   WHEN 'Household' THEN '🧼'
+                   WHEN 'Canned Goods' THEN '🥫'
+                   WHEN 'Condiments' THEN '🍅'
+                   ELSE '📦'
+                 END as icon
+          FROM products 
+          GROUP BY category
+          ORDER BY product_count DESC
+        props:
+          show_icons: true
+          show_counts: true
+          toggle_style: true
+          max_visible: 4
+        styling:
+          container: "flex flex-col space-y-1"
+          pills_container: "flex flex-wrap gap-1"
+          pill: "flex items-center space-x-1 bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded-full text-xs border cursor-pointer transition-colors"
+          pill_active: "bg-blue-100 border-blue-300 text-blue-700"
+          icon: "text-sm"
+          
+      - id: filter_actions
+        type: action_group
+        grid_column: 6
+        layout: "flex flex-col space-y-2"
+        components:
+          - type: reset_button
+            label: "RESET"
+            icon: "↻"
+            styling: "bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-2 rounded-lg text-sm font-medium transition-colors border border-gray-300 w-full"
+          - type: preset_dropdown
+            label: "Presets"
+            options:
+              - { label: "Executive View", filters: { date_range: "30d", regions: ["NCR"] } }
+              - { label: "Brand Manager", filters: { brands: ["Oishi", "Del Monte"], date_range: "7d" } }
+              - { label: "Metro Manila", filters: { regions: ["NCR", "CALABARZON"] } }
+            styling: "bg-white hover:bg-gray-50 border border-gray-300 px-3 py-2 rounded-lg text-sm text-left w-full"
+
+# Smart Filter Dependencies & Logic
+filter_dependencies:
+  - parent: region_filter
+    children: [store_filter, barangay_filter]
+    behavior: "disable_children_when_empty"
+  - parent: category_filter  
+    children: [brand_filter]
+    behavior: "filter_options_contextually"
+  - parent: date_range_filter
+    children: ["all"]
+    behavior: "apply_global_date_constraint"
+
+# Filter Presets & Saved Views
+filter_presets:
+  executive_view:
+    name: "Executive Dashboard"
+    description: "High-level KPIs for leadership"
+    filters:
+      date_range: { preset: "30d" }
+      regions: ["NCR"]
+      categories: ["Beverages", "Snacks", "Dairy"]
+    auto_refresh: 5_minutes
+    
+  brand_manager_view:
+    name: "Brand Performance Focus"
+    description: "Brand-specific insights and competition"
+    filters:
+      date_range: { preset: "7d" }
+      brands: ["Oishi", "Del Monte", "Champion"]
+    auto_refresh: 2_minutes
+    
+  metro_manila_view:
+    name: "Metro Manila Markets"
+    description: "NCR and surrounding areas"
+    filters:
+      regions: ["NCR", "CALABARZON", "Central Luzon"]
+      date_range: { preset: "30d" }
+    auto_refresh: 10_minutes
+
+# Chart Integration & Visual Feedback
+chart_filter_integration:
+  show_applied_filters: true
+  filter_indicators:
+    position: chart_subtitle
+    format: "Filtered by: {filter_list}"
+    style: "text-xs text-gray-500 italic"
+  loading_states:
+    show_skeletons: true
+    skeleton_duration: "300ms"
+    skeleton_style: "animate-pulse bg-gray-200 rounded"
+
+# Filter Behavior & Interaction Rules
+filter_behavior:
+  debounce_delay: 300ms
+  auto_apply: false  # Require explicit "Apply" click
+  persist_state: true  # Save to localStorage
+  url_sync: true  # Sync with URL parameters
+  
+  responsive_breakpoints:
+    mobile: "< 768px"
+    tablet: "768px - 1024px" 
+    desktop: "> 1024px"
+    
+  mobile_behavior:
+    layout: drawer_overlay
+    trigger: "Filter & Sort"
+    position: bottom_sheet
+    backdrop: true
+    
+  performance:
+    lazy_load_options: true
+    virtual_scrolling: true
+    cache_results: 5_minutes
+    
+# Filter State Management
+filter_state:
+  store_type: zustand
+  schema:
+    filters:
+      date_range: { from: "date | null", to: "date | null" }
+      categories: "string[]"
+      regions: "string[]"
+      brands: "string[]"
+      stores: "string[]"
+    ui_state:
+      is_mobile_drawer_open: boolean
+      active_preset: "string | null"
+      last_applied: "timestamp"
+    presets:
+      - name: "Last month FMCG"
+        filters: { date_range: { from: "last_month" }, categories: ["Snacks", "Beverages", "Dairy"] }
+      - name: "NCR focus"
+        filters: { regions: ["NCR"], date_range: { from: "30d" } }
+      - name: "Premium brands"
+        filters: { brands: ["Nestle", "Unilever", "P&G"] }
+
+# Visual Design Tokens for Filters
+filter_design_tokens:
+  colors:
+    primary: "blue-600"
+    primary_hover: "blue-700"
+    secondary: "gray-500"
+    background: "white"
+    border: "gray-200"
+    active_bg: "blue-50"
+    active_text: "blue-700"
+    
+  spacing:
+    container_padding: "px-6 py-4"
+    item_gap: "space-x-4"
+    chip_gap: "space-x-2"
+    
+  typography:
+    label: "text-sm font-medium text-gray-700"
+    value: "text-sm text-gray-900"
+    placeholder: "text-sm text-gray-500"
+    
+  borders:
+    default: "border border-gray-300 rounded-lg"
+    active: "border-blue-300"
+    focus: "ring-2 ring-blue-500 ring-opacity-20"
+    
+  shadows:
+    dropdown: "shadow-lg"
+    filter_bar: "shadow-sm"
+
+# Implementation Guidelines
+filter_implementation:
+  components:
+    base_path: "src/components/filters/"
+    files:
+      - "EnhancedGlobalFilterBar.tsx"
+      - "DateRangeFilter.tsx"
+      - "CategoryChips.tsx" 
+      - "RegionHierarchy.tsx"
+      - "BrandSearch.tsx"
+      - "FilterActions.tsx"
+      
+  hooks:
+    - "useFilterState.ts"
+    - "useFilterPersistence.ts"
+    - "useResponsiveFilters.ts"
+    
+  utilities:
+    - "filterPresets.ts"
+    - "filterValidation.ts"
+    - "filterUrlSync.ts"
 
 # -------------------------------------------------------------
 #  PRODUCTION SNAPSHOT  –  Live Production Data (FMCG Dataset)
