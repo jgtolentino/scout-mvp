@@ -82,7 +82,7 @@ export interface FilterState {
   stores: string[]
 }
 
-export function useRealDataAnalytics(filters: FilterState) {
+export function useRealDataAnalytics() {
   const [metrics, setMetrics] = useState<RealTimeMetrics | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -195,7 +195,7 @@ export function useRealDataAnalytics(filters: FilterState) {
     } finally {
       setLoading(false)
     }
-  }, [filters])
+  }, [])
 
 
   // Fetch data when filters change
@@ -223,7 +223,7 @@ export function useAIInsights(filters: FilterState) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const fetchAIInsights = async () => {
+  const fetchAIInsights = useCallback(async () => {
     try {
       setLoading(true)
       setError(null)
@@ -254,18 +254,11 @@ export function useAIInsights(filters: FilterState) {
     } finally {
       setLoading(false)
     }
-  }
+  }, [filters])
 
   useEffect(() => {
     fetchAIInsights()
-  }, [
-    filters.dateRange.from,
-    filters.dateRange.to,
-    JSON.stringify(filters.barangays),
-    JSON.stringify(filters.categories),
-    JSON.stringify(filters.brands),
-    JSON.stringify(filters.stores)
-  ])
+  }, [fetchAIInsights])
 
   return {
     insights,

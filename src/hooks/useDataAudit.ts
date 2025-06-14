@@ -43,7 +43,7 @@ interface ValidationError {
   type: 'error' | 'warning' | 'info';
   message: string;
   impact: 'critical' | 'moderate' | 'low';
-  details?: any;
+  details?: Record<string, unknown>;
 }
 
 export const useDataAudit = () => {

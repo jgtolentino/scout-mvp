@@ -62,6 +62,13 @@ export interface KPIData {
   totalTransactions: number;
   avgOrderValue: number;
   topProduct: string;
+  /* ────────────  NEW  ──────────── */
+  unitsSold: number;
+  uniqueCustomers: number;
+  repeatRate: number;      // 0-1
+  grossMargin: number;
+  unitsPerTx: number;
+  grossMarginPct: number;  // 0-1
   revenueChange: number;
   transactionChange: number;
   aovChange: number;

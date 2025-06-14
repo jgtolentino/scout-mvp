@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { DollarSign, ShoppingCart, TrendingUp, Star, ChevronDown, ChevronUp } from 'lucide-react';
+import { TrendingUp, ChevronDown, ChevronUp } from 'lucide-react';
 /*
  * 🔄 14-Jun-2025 Hot-fix
  * The page was wired to the outdated `useSupabaseData` hook that still relies on the broken
@@ -8,13 +8,13 @@ import { DollarSign, ShoppingCart, TrendingUp, Star, ChevronDown, ChevronUp } fr
  * from the `transactions` table.
  */
 import { useTransactionData } from '../hooks/useTransactionData';
-import KpiCard from '../components/ui/KpiCard';
 import ChartCard from '../components/ui/ChartCard';
 import DonutChart from '../components/charts/DonutChart';
 import LineChart from '../components/charts/LineChart';
 import AIInsightsPanel from '../components/insights/AIInsightsPanel';
 import ErrorState from '../components/ui/ErrorState';
 import QADashboard from '../components/audit/QADashboard';
+import KpiRow from '../components/dashboard/KpiRow';
 import { useNavigate } from 'react-router-dom';
 import { useFilterStore } from '../store/useFilterStore';
 import { ChartData } from '../types';
@@ -35,23 +35,6 @@ const Overview: React.FC = () => {
   const handleCategoryClick = (category: ChartData) => {
     setCategories([category.name]);
     navigate('/products');
-  };
-
-  const handleKpiClick = (type: string) => {
-    switch (type) {
-      case 'revenue':
-        navigate('/trends');
-        break;
-      case 'transactions':
-        navigate('/trends');
-        break;
-      case 'aov':
-        navigate('/consumers');
-        break;
-      case 'product':
-        navigate('/products');
-        break;
-    }
   };
 
   if (loading) {
@@ -88,44 +71,8 @@ const Overview: React.FC = () => {
         </p>
       </div>
 
-      {/* KPI Cards */}
-      <div className="kpi-grid">
-        <KpiCard
-          title="Total Revenue"
-          value={new Intl.NumberFormat('en-PH', {
-            style: 'currency',
-            currency: 'PHP',
-            notation: 'compact',
-          }).format(kpiData.totalRevenue)}
-          change={kpiData.revenueChange}
-          icon={<DollarSign className="h-5 w-5 text-blue-600" />}
-          onClick={() => handleKpiClick('revenue')}
-        />
-        <KpiCard
-          title="Total Transactions"
-          value={kpiData.totalTransactions.toLocaleString()}
-          change={kpiData.transactionChange}
-          icon={<ShoppingCart className="h-5 w-5 text-blue-600" />}
-          onClick={() => handleKpiClick('transactions')}
-        />
-        <KpiCard
-          title="Avg Order Value"
-          value={new Intl.NumberFormat('en-PH', {
-            style: 'currency',
-            currency: 'PHP',
-          }).format(kpiData.avgOrderValue)}
-          change={kpiData.aovChange}
-          icon={<TrendingUp className="h-5 w-5 text-blue-600" />}
-          onClick={() => handleKpiClick('aov')}
-        />
-        <KpiCard
-          title="Top Product"
-          value={kpiData.topProduct}
-          change={kpiData.topProductChange}
-          icon={<Star className="h-5 w-5 text-blue-600" />}
-          onClick={() => handleKpiClick('product')}
-        />
-      </div>
+      {/* Enhanced KPI Row with 6 Cards */}
+      <KpiRow data={kpiData} />
 
       {/* Charts and AI Insights */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

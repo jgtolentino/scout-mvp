@@ -8,6 +8,14 @@ interface Transaction {
   id: string;
   transaction_date: string;
   total_amount: number;
+  customer_id?: string;
+  transaction_items?: Array<{
+    quantity: number;
+    unit_price: number;
+    product?: {
+      unit_cost?: number;
+    };
+  }>;
 }
 
 export const useTransactionData = () => {
@@ -109,25 +117,40 @@ export const useTransactionData = () => {
     fetchTransactions();
   }, [dateRange, barangays, categories, brands, stores]);
 
-  // Calculate KPI data from real transactions
-  const totalRevenue = transactions.reduce((sum, t) => sum + (t.total_amount || 0), 0);
-  const totalTransactions = transactions.length;
-  
-  console.log('[Scout Debug] KPI Calculation:', { 
-    transactionCount: totalTransactions, 
-    totalRevenue,
-    sampleTransaction: transactions[0]
-  });
+  /*──────────────────────────────────────────────────── KPI CALCS ─────────*/
+  const totalRevenue     = transactions.reduce((s,t)=>s+(t.total_amount||0),0);
+  const totalTransactions= transactions.length;
+  const unitsSold        = transactions.reduce(
+    (s,t)=>s+(t.transaction_items?.reduce((x,i)=>x+i.quantity,0) ?? 0),0);
+  const uniqueCustomers  = new Set(transactions.map(t=>t.customer_id)).size;
+
+  const grossMargin = transactions.reduce((s,t)=>{
+    return s + (t.transaction_items?.reduce((x,i)=>{
+      const cost = i.product?.unit_cost ?? 0;
+      return x + (i.unit_price - cost)*i.quantity;
+    },0) ?? 0);
+  },0);
+
+  const repeatRate = (()=>{
+    const freq:Record<string,number> = {};
+    transactions.forEach(t=>{freq[t.customer_id]=(freq[t.customer_id]||0)+1;});
+    const repeaters = Object.values(freq).filter(v=>v>1).length;
+    return uniqueCustomers ? repeaters/uniqueCustomers : 0;
+  })();
 
   const kpiData: KPIData = {
     totalRevenue,
     totalTransactions,
-    avgOrderValue: totalTransactions > 0 ? totalRevenue / totalTransactions : 0,
+    avgOrderValue: totalTransactions ? totalRevenue/totalTransactions : 0,
     topProduct: getTopProduct(),
-    revenueChange: 0, // TODO: Calculate compared to previous period
-    transactionChange: 0,
-    aovChange: 0,
-    topProductChange: 0,
+    unitsSold,
+    uniqueCustomers,
+    repeatRate,
+    grossMargin,
+    unitsPerTx: totalTransactions ? unitsSold/totalTransactions : 0,
+    grossMarginPct: totalRevenue ? grossMargin/totalRevenue : 0,
+    /* placeholder deltas */
+    revenueChange:0,transactionChange:0,aovChange:0,topProductChange:0
   };
 
   // Calculate category data
