@@ -31,6 +31,10 @@ export const useTransactionData = () => {
          *    enrichment call only if the first query succeeds.
          */
 
+        // Fetch transactions in batches to get all 5,000+ records
+        const batchSize = 1000;
+        const allTransactions: Transaction[] = [];
+        
         let query = supabase
           .from('transactions')
           .select(`
@@ -38,8 +42,7 @@ export const useTransactionData = () => {
             transaction_date,
             total_amount
           `)
-          .order('transaction_date', { ascending: false })
-          .limit(1000); // keep it fast on Vercel edge
+          .order('transaction_date', { ascending: false });
 
         // Apply date range filter
         if (dateRange.from) {
@@ -51,18 +54,49 @@ export const useTransactionData = () => {
 
         // Note: barangay, category, brand, store filters removed for simplified query
 
-        const { data, error: fetchError } = await query;
+        // Fetch data in batches to get all transactions
+        let offset = 0;
+        let hasMore = true;
 
-        if (fetchError) {
-          console.warn('[Scout] Flat fetch failed →', fetchError.message);
-          setError(fetchError.message);
-          setTransactions([]);
-          return;
+        while (hasMore) {
+          const batchQuery = query
+            .range(offset, offset + batchSize - 1);
+
+          const { data, error: fetchError } = await batchQuery;
+
+          if (fetchError) {
+            console.warn('[Scout] Batch fetch failed →', fetchError.message);
+            setError(fetchError.message);
+            setTransactions([]);
+            return;
+          }
+
+          const batchData = (data as Transaction[]) || [];
+          allTransactions.push(...batchData);
+
+          console.log('[Scout Debug] Batch result:', { 
+            batchNumber: Math.floor(offset / batchSize) + 1,
+            batchSize: batchData.length,
+            totalSoFar: allTransactions.length
+          });
+
+          // If we got less than batchSize, we've reached the end
+          hasMore = batchData.length === batchSize;
+          offset += batchSize;
+
+          // Safety limit to prevent infinite loops
+          if (offset > 10000) {
+            console.warn('[Scout] Safety limit reached, stopping batch fetch');
+            break;
+          }
         }
 
-        const filteredData = (data as Transaction[]) || [];
+        console.log('[Scout Debug] Final result:', { 
+          totalTransactions: allTransactions.length,
+          sampleData: allTransactions[0]
+        });
 
-        setTransactions(filteredData);
+        setTransactions(allTransactions);
       } catch (err) {
         console.error('Error fetching transactions:', err);
         setError(err instanceof Error ? err.message : 'Failed to fetch transactions');
@@ -76,12 +110,19 @@ export const useTransactionData = () => {
   }, [dateRange, barangays, categories, brands, stores]);
 
   // Calculate KPI data from real transactions
+  const totalRevenue = transactions.reduce((sum, t) => sum + (t.total_amount || 0), 0);
+  const totalTransactions = transactions.length;
+  
+  console.log('[Scout Debug] KPI Calculation:', { 
+    transactionCount: totalTransactions, 
+    totalRevenue,
+    sampleTransaction: transactions[0]
+  });
+
   const kpiData: KPIData = {
-    totalRevenue: transactions.reduce((sum, t) => sum + (t.total_amount || 0), 0),
-    totalTransactions: transactions.length,
-    avgOrderValue: transactions.length > 0 
-      ? transactions.reduce((sum, t) => sum + (t.total_amount || 0), 0) / transactions.length 
-      : 0,
+    totalRevenue,
+    totalTransactions,
+    avgOrderValue: totalTransactions > 0 ? totalRevenue / totalTransactions : 0,
     topProduct: getTopProduct(),
     revenueChange: 0, // TODO: Calculate compared to previous period
     transactionChange: 0,
