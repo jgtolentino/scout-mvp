@@ -14,8 +14,12 @@
     "e2e": "playwright test",
     "e2e:ui": "playwright test --ui",
     "preview": "vite preview --host 127.0.0.1 --port 4173",
-    "audit": "node ci/audit_deploy.js http://localhost:4173",
-    "audit:prod": "node ci/audit_deploy.js https://scout-4urisgxtr-jakes-projects-e9f46c30.vercel.app"
+    "audit": "npm run audit:dash && npm run audit:caca",
+    "audit:dash": "node ci/audit_dash.js http://localhost:4173",
+    "audit:caca": "node ci/audit_caca.js http://localhost:4173",
+    "audit:prod": "npm run audit:dash:prod && npm run audit:caca:prod",
+    "audit:dash:prod": "node ci/audit_dash.js https://scout-4urisgxtr-jakes-projects-e9f46c30.vercel.app",
+    "audit:caca:prod": "node ci/audit_caca.js https://scout-4urisgxtr-jakes-projects-e9f46c30.vercel.app"
   },
   "dependencies": {
     "@azure/openai": "^2.0.0",

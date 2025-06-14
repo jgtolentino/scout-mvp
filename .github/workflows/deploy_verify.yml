@@ -32,14 +32,18 @@ jobs:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
 
       # -------------------------------------------------------
-      # AI Agent – Headless audit of the fresh deployment
+      # Dual AI Agent Pipeline – dash (headless) + caca (QA)
       # -------------------------------------------------------
       - name: Install Playwright
         run: npx playwright install --with-deps chromium
 
-      - name: Run headless audit
-        id: audit
-        run: node ci/audit_deploy.js "${{ steps.vercel.outputs.preview-url }}"
+      - name: Run dash audit (headless)
+        id: dash
+        run: node ci/audit_dash.js "${{ steps.vercel.outputs.preview-url }}"
+
+      - name: Run caca QA audit
+        id: caca
+        run: node ci/audit_caca.js "${{ steps.vercel.outputs.preview-url }}"
 
       - name: Upload artefacts
         if: success() || failure()
@@ -48,12 +52,18 @@ jobs:
           name: audit-output-${{ github.run_number }}
           path: |
             audit-logs.json
+            qa-errors.json
             screenshot.png
 
-      - name: Fail if console errors
-        if: steps.audit.outputs.has_errors == 'true'
+      - name: Fail if errors detected
+        if: steps.dash.outputs.has_errors == 'true' || steps.caca.outputs.has_errors == 'true'
         run: |
-          echo "::error::Console errors detected – see artefacts";
+          if [ "${{ steps.dash.outputs.has_errors }}" == "true" ]; then
+            echo "::error::Console errors detected by dash agent – see artefacts";
+          fi
+          if [ "${{ steps.caca.outputs.has_errors }}" == "true" ]; then
+            echo "::error::QA errors detected by caca agent – see artefacts";
+          fi
           exit 1
 
       # -------------------------------------------------------
@@ -61,7 +71,7 @@ jobs:
       # board immediately
       # -------------------------------------------------------
       - name: Create / update "Deployment Audit Failure" issue
-        if: failure() && steps.audit.outputs.has_errors == 'true'
+        if: failure() && (steps.dash.outputs.has_errors == 'true' || steps.caca.outputs.has_errors == 'true')
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -75,12 +85,25 @@ jobs:
           echo "**Branch:** ${{ github.ref_name }}"                                    >> "$BODY_FILE"
           echo "**Workflow:** [#${{ github.run_number }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})" >> "$BODY_FILE"
           echo ""                                                                       >> "$BODY_FILE"
-          echo "<details><summary>📊 Console / network errors (click to expand)</summary>" >> "$BODY_FILE"
-          echo ""                                                                       >> "$BODY_FILE"
-          echo '```json'                                                                >> "$BODY_FILE"
-          cat audit-logs.json                                                           >> "$BODY_FILE"
-          echo '```'                                                                    >> "$BODY_FILE"
-          echo "</details>"                                                             >> "$BODY_FILE"
+          if [ -f "audit-logs.json" ]; then
+            echo "<details><summary>📊 Dash Agent: Console / network errors (click to expand)</summary>" >> "$BODY_FILE"
+            echo ""                                                                       >> "$BODY_FILE"
+            echo '```json'                                                                >> "$BODY_FILE"
+            cat audit-logs.json                                                           >> "$BODY_FILE"
+            echo '```'                                                                    >> "$BODY_FILE"
+            echo "</details>"                                                             >> "$BODY_FILE"
+            echo ""                                                                       >> "$BODY_FILE"
+          fi
+          
+          if [ -f "qa-errors.json" ]; then
+            echo "<details><summary>🧪 Caca Agent: QA / KPI drift errors (click to expand)</summary>" >> "$BODY_FILE"
+            echo ""                                                                       >> "$BODY_FILE"
+            echo '```json'                                                                >> "$BODY_FILE"
+            cat qa-errors.json                                                            >> "$BODY_FILE"
+            echo '```'                                                                    >> "$BODY_FILE"
+            echo "</details>"                                                             >> "$BODY_FILE"
+            echo ""                                                                       >> "$BODY_FILE"
+          fi
           echo ""                                                                       >> "$BODY_FILE"
           echo "**📸 Screenshot** – available in the [Actions artifacts panel](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})." >> "$BODY_FILE"
           echo ""                                                                       >> "$BODY_FILE"
