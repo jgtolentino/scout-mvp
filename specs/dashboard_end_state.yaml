@@ -485,7 +485,7 @@ filters_schema:
 #  (ci/update_snapshot.ts overwrites this block)
 # -------------------------------------------------------------
 snapshot:
-  taken_at: "2025-06-14T12:32:06.725Z"
+  taken_at: "2025-06-14T12:48:11.847Z"
   kpis:
     total_revenue      : 1213902.44
     transactions       : 5000
