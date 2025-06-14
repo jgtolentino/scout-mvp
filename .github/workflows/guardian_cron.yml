@@ -29,7 +29,7 @@ jobs:
           exit 1
 
       - name: Slack –  notify on failure
-        if: ${{ failure() }}
+        if: failure() && env.SLACK_WEBHOOK_URL != ''
         uses: 8398a7/action-slack@v3
         with:
           status: ${{ job.status }}
