@@ -2,36 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { Brain, Lightbulb, AlertTriangle, TrendingUp, RefreshCw } from 'lucide-react';
 import { AIInsight } from '../../types';
 import { useFilterStore } from '../../store/useFilterStore';
-import { supabase } from '../../lib/supabase';
+import { useTransactionData } from '../../hooks/useTransactionData';
+import { useAIOpenAIStream } from '../../hooks/useAIOpenAIStream';
 
 const AIInsightsPanel: React.FC = () => {
-  const [insights, setInsights] = useState<AIInsight[]>([]);
-  const [loading, setLoading] = useState(false);
-  const { getActiveFilterCount } = useFilterStore();
-
-  const loadInsights = async () => {
-    setLoading(true);
-    try {
-      const { data, error } = await supabase
-        .rpc('get_ai_insights', {
-          p_confidence_threshold: 0.7,
-          p_limit: 3
-        });
-
-      if (error) throw error;
-
-      setInsights(data || []);
-    } catch (error) {
-      console.error('Error loading insights:', error);
-      setInsights([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadInsights();
-  }, [getActiveFilterCount()]);
+  const { transactions } = useTransactionData();
+  const { insights, streamText, loading, error, regenerate } = useAIOpenAIStream(transactions);
+  const [showStreamText, setShowStreamText] = useState(false);
 
   const getInsightIcon = (category: AIInsight['category']) => {
     switch (category) {
@@ -41,6 +18,8 @@ const AIInsightsPanel: React.FC = () => {
         return <AlertTriangle className="h-4 w-4 text-red-600" />;
       case 'trend':
         return <TrendingUp className="h-4 w-4 text-blue-600" />;
+      case 'system':
+        return <Brain className="h-4 w-4 text-purple-600" />;
       default:
         return <Brain className="h-4 w-4 text-gray-600" />;
     }
@@ -54,6 +33,8 @@ const AIInsightsPanel: React.FC = () => {
         return 'border-l-red-400';
       case 'trend':
         return 'border-l-blue-400';
+      case 'system':
+        return 'border-l-purple-400';
       default:
         return 'border-l-gray-400';
     }
@@ -65,15 +46,46 @@ const AIInsightsPanel: React.FC = () => {
         <div className="flex items-center space-x-2">
           <Brain className="h-5 w-5 text-purple-600" />
           <h3 className="text-lg font-semibold text-gray-900">AI Insights</h3>
+          {loading && (
+            <div className="flex items-center space-x-1">
+              <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+              <span className="text-xs text-blue-600">Streaming...</span>
+            </div>
+          )}
         </div>
-        <button
-          onClick={loadInsights}
-          disabled={loading}
-          className="p-2 text-gray-400 hover:text-gray-600 rounded-md hover:bg-gray-50 transition-colors disabled:opacity-50"
-        >
-          <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-        </button>
+        <div className="flex items-center space-x-2">
+          {streamText && (
+            <button
+              onClick={() => setShowStreamText(!showStreamText)}
+              className="text-xs text-blue-600 hover:text-blue-800 underline"
+            >
+              {showStreamText ? 'Hide' : 'Show'} Stream
+            </button>
+          )}
+          <button
+            onClick={regenerate}
+            disabled={loading}
+            className="p-2 text-gray-400 hover:text-gray-600 rounded-md hover:bg-gray-50 transition-colors disabled:opacity-50"
+          >
+            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+          </button>
+        </div>
       </div>
+
+      {error && (
+        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+          <p className="text-sm text-red-700">⚠️ {error}</p>
+        </div>
+      )}
+
+      {showStreamText && streamText && (
+        <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+          <h4 className="text-xs font-medium text-blue-700 mb-2">Live Stream Output:</h4>
+          <pre className="text-xs text-blue-600 whitespace-pre-wrap font-mono">
+            {streamText}
+          </pre>
+        </div>
+      )}
 
       <div className="space-y-4">
         {loading ? (
@@ -86,7 +98,7 @@ const AIInsightsPanel: React.FC = () => {
               </div>
             ))}
           </div>
-        ) : (
+        ) : insights.length > 0 ? (
           insights.map((insight, index) => (
             <div
               key={index}
@@ -100,7 +112,7 @@ const AIInsightsPanel: React.FC = () => {
                   <p className="text-sm text-gray-700 leading-relaxed">{insight.insight}</p>
                   <div className="flex items-center space-x-2 mt-1">
                     <span className="text-xs text-gray-500">
-                      Confidence: {Math.round(insight.confidence * 100)}%
+                      Confidence: {Math.round(insight.confidence)}%
                     </span>
                     <span className="text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded-full capitalize">
                       {insight.category}
@@ -124,6 +136,17 @@ const AIInsightsPanel: React.FC = () => {
               )}
             </div>
           ))
+        ) : (
+          <div className="text-center py-8">
+            <Brain className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+            <p className="text-gray-500 text-sm">No insights available</p>
+            <button
+              onClick={regenerate}
+              className="mt-2 text-blue-600 hover:text-blue-800 text-sm underline"
+            >
+              Generate Insights
+            </button>
+          </div>
         )}
       </div>
     </div>

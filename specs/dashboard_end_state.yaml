@@ -1,0 +1,251 @@
+# ===========================================================
+# Scout Analytics – Desired End-State Dashboard Specification
+# Version: 2025-06-14-alpha
+# Format: Pulser-compatible YAML (machine-readable, CI-verifiable)
+# -----------------------------------------------------------
+# All UI/UX, data contracts, and KPI formulas are defined
+# here. Runtime services must assert that every component
+# listed below resolves without error before the release
+# pipeline can pass.
+# ===========================================================
+meta:
+  dashboard_id: scout-analytics-mvp
+  name: "Scout Analytics – Philippine Retail Intelligence"
+  route: "/"
+  owner: pulser/edge # primary agent responsible
+  status: production-ready
+  data_sources:
+    - supabase[transactions]
+    - supabase[stores]
+    - supabase[products]
+    - supabase[customers]
+    - supabase[inventory] # created 2025-06-14
+    - edge_function[track_event] # optional
+    - edge_function[geocode_address] # optional
+
+layout:
+  viewport:
+    min-width: 320 # px
+    breakpoints: [sm, md, lg, xl]
+  grid:
+    columns:
+      sm: 1
+      md: 2
+      lg: 3
+      xl: 4
+    gap: 1rem
+
+components:
+  # ────────────────────── KPI ROW ─────────────────────────
+  - id: kpi_total_revenue
+    type: kpi
+    title: "Total Revenue"
+    unit: currency
+    format: "₱0,0.00"
+    formula: |
+      SELECT COALESCE(SUM(total_amount),0) AS value
+      FROM transactions
+      WHERE {{ global_filters }};
+    delta:
+      basis: prev_28d
+      formula: |
+        WITH curr AS (
+          SELECT SUM(total_amount) AS v
+          FROM transactions
+          WHERE transaction_date >= {{period_start}}
+          AND transaction_date <= {{period_end}}
+        ),
+        prev AS (
+          SELECT SUM(total_amount) AS v
+          FROM transactions
+          WHERE transaction_date >= {{period_start_prev}}
+          AND transaction_date <= {{period_end_prev}}
+        )
+        SELECT ROUND( (curr.v - prev.v) / NULLIF(prev.v,0) * 100, 1) AS pct
+        FROM curr, prev;
+    layout:
+      col_span: 1
+
+  - id: kpi_transactions
+    type: kpi
+    title: "Transactions"
+    unit: count
+    format: "0,0"
+    formula: |
+      SELECT COUNT(*) FROM transactions WHERE {{ global_filters }};
+    delta: 
+      basis: prev_28d
+      formula: same-as-revenue
+    layout: 
+      col_span: 1
+
+  - id: kpi_aov
+    type: kpi
+    title: "Avg Order Value"
+    unit: currency
+    format: "₱0,0.00"
+    formula: |
+      SELECT COALESCE(AVG(total_amount),0)
+      FROM transactions
+      WHERE {{ global_filters }};
+    delta: 
+      basis: prev_28d
+      formula: same-as-revenue
+    layout: 
+      col_span: 1
+
+  - id: kpi_units_sold
+    type: kpi
+    title: "Units Sold"
+    unit: count
+    format: "0,0"
+    formula: |
+      SELECT COALESCE(SUM(item.quantity),0)
+      FROM transaction_items item
+      JOIN transactions t USING (transaction_id)
+      WHERE {{ global_filters }};
+    delta: 
+      basis: prev_28d
+      formula: same-as-revenue
+    layout: 
+      col_span: 1
+
+  - id: kpi_unique_customers
+    type: kpi
+    title: "Unique Customers"
+    unit: count
+    format: "0,0"
+    formula: |
+      SELECT COUNT(DISTINCT customer_id)
+      FROM transactions
+      WHERE {{ global_filters }};
+    delta: 
+      basis: prev_28d
+      formula: same-as-revenue
+    layout: 
+      col_span: 1
+
+  - id: kpi_gross_margin_pct
+    type: kpi
+    title: "Gross Margin %"
+    unit: percent
+    format: "0.0 %"
+    formula: |
+      WITH line AS (
+        SELECT SUM((ti.unit_price - COALESCE(p.unit_cost,0))*ti.quantity) AS gm,
+               SUM(t.total_amount) AS rev
+        FROM transaction_items ti
+        JOIN products p ON p.id = ti.product_id
+        JOIN transactions t ON t.id = ti.transaction_id
+        WHERE {{ global_filters }}
+      )
+      SELECT ROUND( gm / NULLIF(rev,0) * 100, 1 ) FROM line;
+    delta: 
+      basis: prev_28d
+      formula: same-as-revenue
+    layout: 
+      col_span: 1
+
+  # ────────────────── ANALYTICS VISUALS ───────────────────
+  - id: chart_revenue_trend
+    type: chart
+    title: "Revenue Trend – Last 30 days"
+    chart_type: line
+    measures: [total_amount]
+    dimension: transaction_date::date
+    query: |
+      SELECT DATE(transaction_date) AS date,
+             SUM(total_amount) AS value
+      FROM transactions
+      WHERE transaction_date >= NOW() - INTERVAL '30 days'
+      AND {{ global_filters }}
+      GROUP BY 1
+      ORDER BY 1;
+    layout: 
+      col_span: 2
+      min_height: 18rem
+      lazy_load: false
+
+  - id: chart_category_performance
+    type: chart
+    title: "Category Performance"
+    chart_type: donut
+    measures: [revenue]
+    dimension: products.category
+    query: |
+      SELECT p.category AS label,
+             SUM(ti.unit_price * ti.quantity) AS value
+      FROM transaction_items ti
+      JOIN products p ON p.id = ti.product_id
+      JOIN transactions t ON t.id = ti.transaction_id
+      WHERE {{ global_filters }}
+      GROUP BY 1
+      ORDER BY value DESC
+      LIMIT 6;
+    layout: 
+      col_span: 1
+      lazy_load: true
+
+  - id: chart_region_distribution
+    type: chart
+    title: "Regional Distribution"
+    chart_type: geo
+    dimension: stores.region
+    measures: [revenue]
+    query: |
+      SELECT s.region AS region,
+             SUM(t.total_amount) AS revenue
+      FROM transactions t
+      JOIN stores s ON s.id = t.store_id
+      WHERE {{ global_filters }}
+      GROUP BY 1;
+    layout: 
+      col_span: 1
+      lazy_load: true
+      mobile_fallback: "ranked_table"
+
+  # ────────────────────── AI INSIGHTS ─────────────────────
+  - id: panel_ai_insights
+    type: insight_panel
+    title: "AI-Powered Insights"
+    datasource: edge_function/azure_openai_stream        # token-streaming
+    props:
+      max_items: 3
+      show_confidence: true
+    layout: 
+      col_span: 1
+
+  # ──────────────── DATA QUALITY MONITOR ─────────────────
+  - id: panel_data_quality
+    type: quality_audit
+    title: "Data Quality & Audit Validation"
+    datasource: view/data_quality_audit
+    threshold: 95 # %
+    layout: 
+      col_span: 2
+
+  # ────────────────── ACTION ITEMS BOARD ─────────────────
+  - id: board_action_items
+    type: action_board
+    title: "Prioritised Action Items"
+    datasource: table/actions
+    columns: [priority, title, impact_estimate, owner, due_date]
+    layout: 
+      col_span: 2
+
+# =========================================================
+# Global Filters Definition
+# ---------------------------------------------------------
+# Each page mounts <GlobalFilters/> which updates the
+# reactive store filters. Placeholders above are
+# substituted by the runtime query builder.
+# =========================================================
+filters_schema:
+  date_range: 
+    from: date|null
+    to: date|null
+  barangays: string[]
+  regions: string[]
+  categories: string[]
+  brands: string[]
+  stores: string[]

@@ -78,7 +78,7 @@ export interface KPIData {
 export interface AIInsight {
   insight: string;
   confidence: number;
-  category: 'trend' | 'opportunity' | 'alert';
+  category: 'trend' | 'opportunity' | 'alert' | 'system';
   actionItems: string[];
 }
 
