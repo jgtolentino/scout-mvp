@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { clsx as cls } from 'clsx';
-import { Send, X } from 'lucide-react';
+import { Send } from 'lucide-react';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -35,7 +35,7 @@ export default function ScoutRetailBot() {
         }]);
         setIsLoading(false);
       }, 1500);
-    } catch (error) {
+    } catch {
       setHistory(prev => [...prev, {
         role: 'assistant',
         content: 'Sorry, I encountered an error processing your request. Please try again.'

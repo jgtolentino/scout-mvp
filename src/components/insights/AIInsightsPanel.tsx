@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Brain, Lightbulb, AlertTriangle, TrendingUp, RefreshCw } from 'lucide-react';
 import { AIInsight } from '../../types';
-import { useFilterStore } from '../../store/useFilterStore';
 import { useTransactionData } from '../../hooks/useTransactionData';
 import { useAIOpenAIStream } from '../../hooks/useAIOpenAIStream';
 

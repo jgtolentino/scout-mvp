@@ -8,11 +8,6 @@ interface AIInsight {
   actionItems: string[];
 }
 
-interface StreamResponse {
-  insights: AIInsight[];
-  error?: string;
-}
-
 export const useAIOpenAIStream = (transactionData: any[] | null) => {
   const [insights, setInsights] = useState<AIInsight[]>([]);
   const [streamText, setStreamText] = useState('');
