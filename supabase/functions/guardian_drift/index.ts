@@ -31,7 +31,7 @@ interface DriftResult {
   }
 }
 
-async function fetchYamlSpec(requestUrl: string): Promise<any> {
+async function fetchYamlSpec(requestUrl: string): Promise<Record<string, unknown>> {
   const url = new URL(requestUrl)
   const dryRun = url.searchParams.get('dry') === 'true'
   const specUrl = url.searchParams.get('spec_url')
@@ -43,18 +43,18 @@ async function fetchYamlSpec(requestUrl: string): Promise<any> {
     throw new Error(`Failed to fetch YAML spec from ${targetUrl}: ${response.statusText}`)
   }
   const yamlText = await response.text()
-  return yamlParse(yamlText)
+  return yamlParse(yamlText) as Record<string, unknown>
 }
 
-async function getCurrentCatalog(supabaseClient: any): Promise<any> {
-  const { data, error } = await supabaseClient.rpc('supabase_catalog_dump')
+async function getCurrentCatalog(supabaseClient: any): Promise<Record<string, unknown>> {
+  const { data, error } = await supabaseClient.rpc('supabase_catalog_dump') as { data: Record<string, unknown>, error: any };
   if (error) {
     throw new Error(`Failed to get catalog: ${error.message}`)
   }
   return data
 }
 
-function detectDrift(spec: any, catalog: any): DriftResult {
+function detectDrift(spec: Record<string, any>, catalog: Record<string, any>): DriftResult {
   const result: DriftResult = {
     hasDrift: false,
     details: {
@@ -65,10 +65,10 @@ function detectDrift(spec: any, catalog: any): DriftResult {
   }
 
   // Check roles
-  const specRoles = new Set(spec.roles)
-  const catalogRoles = new Set(catalog.roles)
+  const specRoles = new Set(spec.roles as any[])
+  const catalogRoles = new Set(catalog.roles as any[])
   
-  for (const role of specRoles) {
+  for (const role of specRoles as any[]) {
     if (!catalogRoles.has(role)) {
       result.details.missing?.push(`Role: ${role}`)
       result.hasDrift = true
@@ -76,10 +76,10 @@ function detectDrift(spec: any, catalog: any): DriftResult {
   }
 
   // Check tables
-  const specTables = new Map(spec.tables.map((t: any) => [t.name, t]))
-  const catalogTables = new Map(catalog.tables.map((t: any) => [t.name, t]))
+  const specTables = new Map((spec.tables as any[]).map((t: any) => [t.name, t]))
+  const catalogTables = new Map((catalog.tables as any[]).map((t: any) => [t.name, t]))
 
-  for (const [name, specTable] of specTables) {
+  for (const [name, specTable] of specTables as any) {
     const catalogTable = catalogTables.get(name)
     if (!catalogTable) {
       result.details.missing?.push(`Table: ${name}`)
@@ -88,10 +88,10 @@ function detectDrift(spec: any, catalog: any): DriftResult {
     }
 
     // Compare columns
-    const specColumns = new Map(specTable.columns.map((c: any) => [c.name, c]))
-    const catalogColumns = new Map(catalogTable.columns.map((c: any) => [c.name, c]))
+    const specColumns = new Map((specTable.columns as any[]).map((c: any) => [c.name, c]))
+    const catalogColumns = new Map((catalogTable.columns as any[]).map((c: any) => [c.name, c]))
 
-    for (const [colName, specCol] of specColumns) {
+    for (const [colName, specCol] of specColumns as any) {
       const catalogCol = catalogColumns.get(colName)
       if (!catalogCol) {
         result.details.missing?.push(`Column: ${name}.${colName}`)
@@ -120,10 +120,10 @@ function detectDrift(spec: any, catalog: any): DriftResult {
     }
 
     // Compare policies
-    const specPolicies = new Map(specTable.policies?.map((p: any) => [p.name, p]) || [])
-    const catalogPolicies = new Map(catalogTable.policies?.map((p: any) => [p.name, p]) || [])
+    const specPolicies = new Map((specTable.policies?.map((p: any) => [p.name, p]) || []) as any[])
+    const catalogPolicies = new Map((catalogTable.policies?.map((p: any) => [p.name, p]) || []) as any[])
 
-    for (const [policyName, specPolicy] of specPolicies) {
+    for (const [policyName, specPolicy] of specPolicies as any) {
       const catalogPolicy = catalogPolicies.get(policyName)
       if (!catalogPolicy) {
         result.details.missing?.push(`Policy: ${name}.${policyName}`)
@@ -161,13 +161,13 @@ async function raiseGitHubIssue(driftResult: DriftResult): Promise<void> {
 # Schema Drift Detected
 
 ## Missing Elements
-${driftResult.details.missing?.map(m => `- ${m}`).join('\n') || 'None'}
+${driftResult.details.missing?.map((m: any) => `- ${m}`).join('\n') || 'None'}
 
 ## Extra Elements
-${driftResult.details.extra?.map(e => `- ${e}`).join('\n') || 'None'}
+${driftResult.details.extra?.map((e: any) => `- ${e}`).join('\n') || 'None'}
 
 ## Modified Elements
-${driftResult.details.modified?.map(m => `
+${driftResult.details.modified?.map((m: any) => `
 ### ${m.name}
 Expected:
 \`\`\`json
@@ -230,9 +230,9 @@ serve(async (req) => {
         status: 200
       }
     )
-  } catch (error) {
+  } catch (error: unknown) {
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: (error as any).message }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 500

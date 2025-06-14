@@ -4,19 +4,22 @@ import { readFileSync } from 'fs'
 import { parse as yamlParse } from 'yaml'
 
 function yamlToDDL(yamlContent: string): string {
-  const spec = yamlParse(yamlContent)
+  const spec = yamlParse(yamlContent) as Record<string, unknown>;
   const ddl: string[] = []
 
   // Create roles
   if (spec.roles) {
-    for (const role of spec.roles) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    for (const role of (spec.roles as any[])) {
       ddl.push(`CREATE ROLE ${role.name}${role.noinherit ? ' NOINHERIT' : ''};`)
     }
   }
 
   // Create tables
   if (spec.tables) {
-    for (const table of spec.tables) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    for (const table of (spec.tables as any[])) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const columns = table.columns.map((col: any) => {
         const parts = [`${col.name} ${col.type}`]
         if (col.is_nullable === false) parts.push('NOT NULL')
@@ -36,7 +39,8 @@ CREATE TABLE ${table.name} (
 
       // Create policies
       if (table.policies) {
-        for (const policy of table.policies) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        for (const policy of (table.policies as any[])) {
           ddl.push(`
 CREATE POLICY ${policy.name} ON ${table.name}
   FOR ${policy.operation}
@@ -49,7 +53,8 @@ CREATE POLICY ${policy.name} ON ${table.name}
 
   // Create views
   if (spec.views) {
-    for (const view of spec.views) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    for (const view of (spec.views as any[])) {
       ddl.push(`
 CREATE OR REPLACE VIEW ${view.name} AS
 ${view.definition};`)
@@ -61,7 +66,8 @@ ${view.definition};`)
 
       // Create policies
       if (view.policies) {
-        for (const policy of view.policies) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        for (const policy of (view.policies as any[])) {
           ddl.push(`
 CREATE POLICY ${policy.name} ON ${view.name}
   FOR ${policy.operation}
@@ -74,7 +80,9 @@ CREATE POLICY ${policy.name} ON ${view.name}
 
   // Create functions
   if (spec.functions) {
-    for (const func of spec.functions) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    for (const func of (spec.functions as any[])) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const params = func.parameters.map((p: any) => {
         const parts = [p.name]
         if (p.type) parts.push(p.type)
@@ -108,8 +116,9 @@ if (require.main === module) {
     const yamlContent = readFileSync(yamlFile, 'utf8')
     const ddl = yamlToDDL(yamlContent)
     console.log(ddl)
-  } catch (error) {
-    console.error('Error:', error.message)
+  } catch (error: unknown) { // Explicitly type error as unknown
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    console.error('Error:', (error as any).message)
     process.exit(1)
   }
 }

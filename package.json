@@ -20,7 +20,8 @@
     "audit:prod": "npm run audit:dash:prod && npm run audit:caca:prod",
     "audit:dash:prod": "node ci/audit_dash.js https://scout-4urisgxtr-jakes-projects-e9f46c30.vercel.app",
     "audit:caca:prod": "node ci/audit_caca.js https://scout-4urisgxtr-jakes-projects-e9f46c30.vercel.app",
-    "schema:lint": "ts-node scripts/yaml2ddl.ts specs/dashboard_end_state.yaml > /dev/null"
+    "schema:lint": "ts-node scripts/yaml2ddl.ts specs/dashboard_end_state.yaml > /dev/null",
+    "lint:fix": "eslint . --fix"
   },
   "dependencies": {
     "@azure/openai": "^2.0.0",
