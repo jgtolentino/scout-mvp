@@ -16,6 +16,21 @@ A production-ready analytics dashboard built with React, TypeScript, and Supabas
 
 ## 🚀 Quick Start
 
+### 🏃‍♂️ Run the interactive demo (no database required)
+
+```bash
+git clone https://github.com/jgtolentino/scout-mvp.git
+cd scout-mvp
+npm install
+cp .env.example .env
+echo "VITE_SCOUT_DEMO=on" >> .env
+npm run dev          # Opens http://localhost:5173 (all data in memory)
+```
+
+*No Supabase keys required. Includes 5,000 realistic FMCG transactions.*
+
+### 🔧 Full production setup
+
 ```bash
 git clone https://github.com/jgtolentino/scout-mvp.git
 cd scout-mvp
