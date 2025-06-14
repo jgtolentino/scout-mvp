@@ -525,406 +525,438 @@ snapshot:
     - "Which region grew fastest MoM?"
     - "Explain what the 5,000-row dataset actually contains"
 
-# Project Scout Database Specification
-# This file defines the canonical state of our Supabase database
+# ===========================================================
+# Scout Analytics – Supabase Database Schema Specification
+# Canonical Source of Truth for Schema Drift Detection
+# ===========================================================
 
 roles:
   - name: admin
-    inherit: false
+    noinherit: true
   - name: analyst
-    inherit: false
+    noinherit: true
+  - name: authenticated
+    noinherit: false
+  - name: anon
+    noinherit: false
+  - name: service_role
+    noinherit: false
 
 tables:
-  brands:
-    columns:
-      - name: id
-        type: integer
-        primary_key: true
-      - name: name
-        type: varchar
-        not_null: true
-      - name: company
-        type: text
-        not_null: true
-      - name: category
-        type: varchar
-      - name: is_tbwa
-        type: boolean
-        default: false
-      - name: market_share
-        type: decimal(5,2)
-      - name: created_at
-        type: timestamptz
-        default: now()
-    rls:
-      enabled: true
-      policies:
-        - name: Allow public read access to brands
-          operation: select
-          using: true
-        - name: Allow admin and service_role full access on brands
-          operation: all
-          using: auth.role() in ('admin', 'service_role')
-          with_check: auth.role() in ('admin', 'service_role')
-
-  products:
-    columns:
-      - name: id
-        type: integer
-        primary_key: true
-      - name: name
-        type: varchar
-        not_null: true
-      - name: brand_id
-        type: integer
-        references: brands(id)
-      - name: created_at
-        type: timestamptz
-        default: now()
-      - name: category
-        type: varchar
-      - name: subcategory
-        type: text
-      - name: unit_cost
-        type: decimal(10,2)
-      - name: retail_price
-        type: decimal(10,2)
-      - name: size
-        type: text
-      - name: unit
-        type: text
-    rls:
-      enabled: true
-      policies:
-        - name: Allow analyst, admin, service_role read access on products
-          operation: select
-          using: auth.role() in ('analyst', 'admin', 'service_role')
-        - name: Allow admin and service_role write access on products
-          operation: all
-          using: auth.role() in ('admin', 'service_role')
-          with_check: auth.role() in ('admin', 'service_role')
-
-  stores:
-    columns:
-      - name: id
-        type: integer
-        primary_key: true
-      - name: name
-        type: text
-        not_null: true
-        unique: true
-      - name: location
-        type: text
-      - name: barangay
-        type: text
-      - name: city
-        type: text
-      - name: region
-        type: text
-      - name: latitude
-        type: numeric
-      - name: longitude
-        type: numeric
-      - name: store_type
-        type: text
-      - name: size_category
-        type: text
-      - name: created_at
-        type: timestamptz
-        default: now()
-      - name: updated_at
-        type: timestamptz
-        default: now()
-    rls:
-      enabled: true
-      policies:
-        - name: Allow analyst, admin, service_role read access on stores
-          operation: select
-          using: auth.role() in ('analyst', 'admin', 'service_role')
-        - name: Allow admin and service_role write access on stores
-          operation: all
-          using: auth.role() in ('admin', 'service_role')
-          with_check: auth.role() in ('admin', 'service_role')
-
-  customers:
-    columns:
-      - name: id
-        type: integer
-        primary_key: true
-      - name: customer_id
-        type: text
-        not_null: true
-        unique: true
-      - name: name
-        type: text
-        not_null: true
-      - name: age
-        type: integer
-      - name: gender
-        type: text
-        check: gender in ('Male', 'Female', 'Other')
-      - name: region
-        type: text
-        not_null: true
-      - name: city
-        type: text
-      - name: barangay
-        type: text
-      - name: loyalty_tier
-        type: text
-        default: 'regular'
-      - name: total_spent
-        type: numeric
-        default: 0
-      - name: visit_count
-        type: integer
-        default: 1
-      - name: created_at
-        type: timestamptz
-        default: now()
-    rls:
-      enabled: true
-      policies:
-        - name: Allow analyst, admin, service_role read access on customers
-          operation: select
-          using: auth.role() in ('analyst', 'admin', 'service_role')
-
-  devices:
+  - name: brands
     columns:
       - name: id
         type: uuid
-        primary_key: true
+        is_nullable: false
         default: gen_random_uuid()
-      - name: device_id
+        is_primary_key: true
+      - name: name
         type: text
-        not_null: true
-        unique: true
-      - name: device_type
+        is_nullable: false
+      - name: company
         type: text
-        not_null: true
-        default: 'RaspberryPi5'
-      - name: firmware_version
-        type: text
-        not_null: true
-        default: '1.0.0'
-      - name: store_id
-        type: integer
-        references: stores(id)
-      - name: status
-        type: text
-        not_null: true
-        default: 'active'
-        check: status in ('active', 'inactive', 'maintenance')
-      - name: registration_time
-        type: timestamptz
-        default: now()
-      - name: last_seen
-        type: timestamptz
-        default: now()
-      - name: metadata
-        type: jsonb
-        default: '{}'
-      - name: location
-        type: text
-      - name: network_info
-        type: jsonb
-        default: '{}'
-      - name: created_at
-        type: timestamptz
-        default: now()
-      - name: updated_at
-        type: timestamptz
-        default: now()
-    rls:
-      enabled: true
-      policies:
-        - name: Allow analyst, admin, service_role read access on devices
-          operation: select
-          using: auth.role() in ('analyst', 'admin', 'service_role')
-        - name: Allow admin and service_role write access on devices
-          operation: all
-          using: auth.role() in ('admin', 'service_role')
-          with_check: auth.role() in ('admin', 'service_role')
+        is_nullable: true
+    rls_enabled: true
+    policies:
+      - name: "Allow public read access to brands"
+        operation: SELECT
+        using: "true"
+      - name: "Allow service role full access to brands"
+        operation: ALL
+        using: "role() = 'service_role'"
 
-  transactions:
+  - name: products
     columns:
       - name: id
-        type: integer
-        primary_key: true
-      - name: created_at
-        type: timestamptz
-        default: now()
-      - name: transaction_date
-        type: timestamptz
-        not_null: true
-      - name: total_amount
-        type: numeric
-        default: 0
-      - name: customer_age
-        type: integer
-      - name: customer_gender
-        type: varchar
-      - name: customer_id
+        type: uuid
+        is_nullable: false
+        default: gen_random_uuid()
+        is_primary_key: true
+      - name: name
         type: text
-        references: customers(customer_id)
-      - name: store_id
-        type: integer
-        references: stores(id)
-      - name: checkout_seconds
-        type: integer
-      - name: is_weekend
-        type: boolean
-      - name: nlp_processed
-        type: boolean
-        default: false
-      - name: nlp_processed_at
-        type: timestamptz
-      - name: nlp_confidence_score
-        type: numeric
-      - name: device_id
+        is_nullable: false
+      - name: description
         type: text
-        references: devices(device_id)
-      - name: payment_method
-        type: varchar
-        default: 'cash'
-      - name: checkout_time
-        type: timestamptz
-        default: now()
-      - name: request_type
-        type: varchar
-        default: 'branded'
-      - name: transcription_text
+        is_nullable: true
+      - name: brand_id
+        type: uuid
+        is_nullable: false
+      - name: category
         type: text
-      - name: suggestion_accepted
-        type: boolean
-        default: false
-    rls:
-      enabled: true
-      policies:
-        - name: Allow analyst, admin, service_role read access on transactions
-          operation: select
-          using: auth.role() in ('analyst', 'admin', 'service_role')
-        - name: Allow admin and service_role write access on transactions
-          operation: all
-          using: auth.role() in ('admin', 'service_role')
-          with_check: auth.role() in ('admin', 'service_role')
-
-  transaction_items:
-    columns:
-      - name: id
-        type: integer
-        primary_key: true
-      - name: transaction_id
-        type: integer
-        references: transactions(id)
-      - name: product_id
-        type: integer
-        references: products(id)
-      - name: quantity
-        type: integer
-        not_null: true
+        is_nullable: false
       - name: unit_price
         type: numeric
-        not_null: true
+        is_nullable: false
+      - name: unit_cost
+        type: numeric
+        is_nullable: false
+    rls_enabled: true
+    policies:
+      - name: "Allow public read access to products"
+        operation: SELECT
+        using: "true"
+      - name: "Allow service role full access to products"
+        operation: ALL
+        using: "role() = 'service_role'"
+
+  - name: stores
+    columns:
+      - name: id
+        type: uuid
+        is_nullable: false
+        default: gen_random_uuid()
+        is_primary_key: true
+      - name: name
+        type: text
+        is_nullable: false
+      - name: address
+        type: text
+        is_nullable: true
+      - name: region
+        type: text
+        is_nullable: false
+        default: "'NCR'"
+    rls_enabled: true
+    policies:
+      - name: "Allow public read access to stores"
+        operation: SELECT
+        using: "true"
+      - name: "Allow service role full access to stores"
+        operation: ALL
+        using: "role() = 'service_role'"
+
+  - name: customers
+    columns:
+      - name: id
+        type: uuid
+        is_nullable: false
+        default: gen_random_uuid()
+        is_primary_key: true
+      - name: customer_id
+        type: text
+        is_nullable: false
+      - name: first_name
+        type: text
+        is_nullable: true
+      - name: last_name
+        type: text
+        is_nullable: true
+      - name: email
+        type: text
+        is_nullable: true
+      - name: age
+        type: integer
+        is_nullable: true
+      - name: gender
+        type: text
+        is_nullable: true
+      - name: income_bracket
+        type: text
+        is_nullable: true
+    rls_enabled: true
+    policies:
+      - name: "Allow authenticated users read/write access to customers"
+        operation: ALL
+        using: "role() = 'authenticated'"
+      - name: "Allow service role full access to customers"
+        operation: ALL
+        using: "role() = 'service_role'"
+
+  - name: devices
+    columns:
+      - name: id
+        type: uuid
+        is_nullable: false
+        default: gen_random_uuid()
+        is_primary_key: true
+      - name: device_name
+        type: text
+        is_nullable: false
+      - name: store_id
+        type: uuid
+        is_nullable: false
+      - name: last_activity
+        type: timestamp with time zone
+        is_nullable: false
+        default: now()
+      - name: status
+        type: text
+        is_nullable: false
+        default: "'active'"
+    rls_enabled: true
+    policies:
+      - name: "Allow authenticated users read/write access to devices"
+        operation: ALL
+        using: "role() = 'authenticated'"
+      - name: "Allow service role full access to devices"
+        operation: ALL
+        using: "role() = 'service_role'"
+
+  - name: transactions
+    columns:
+      - name: id
+        type: uuid
+        is_nullable: false
+        default: gen_random_uuid()
+        is_primary_key: true
+      - name: transaction_date
+        type: timestamp with time zone
+        is_nullable: false
+        default: now()
+      - name: customer_id
+        type: uuid
+        is_nullable: false
+      - name: store_id
+        type: uuid
+        is_nullable: false
+      - name: total_amount
+        type: numeric
+        is_nullable: false
+      - name: payment_method
+        type: text
+        is_nullable: true
+    rls_enabled: true
+    policies:
+      - name: "Allow authenticated users read/write access to transactions"
+        operation: ALL
+        using: "role() = 'authenticated'"
+      - name: "Allow service role full access to transactions"
+        operation: ALL
+        using: "role() = 'service_role'"
+
+  - name: transaction_items
+    columns:
+      - name: id
+        type: uuid
+        is_nullable: false
+        default: gen_random_uuid()
+        is_primary_key: true
+      - name: transaction_id
+        type: uuid
+        is_nullable: false
+      - name: product_id
+        type: uuid
+        is_nullable: false
+      - name: quantity
+        type: integer
+        is_nullable: false
+      - name: unit_price
+        type: numeric
+        is_nullable: false
       - name: total_price
         type: numeric
-        not_null: true
-      - name: created_at
-        type: timestamptz
-        default: now()
-    rls:
-      enabled: true
-      policies:
-        - name: Allow analyst, admin, service_role read access on transaction_items
-          operation: select
-          using: auth.role() in ('analyst', 'admin', 'service_role')
-        - name: Allow admin and service_role write access on transaction_items
-          operation: all
-          using: auth.role() in ('admin', 'service_role')
-          with_check: auth.role() in ('admin', 'service_role')
+        is_nullable: false
+    rls_enabled: true
+    policies:
+      - name: "Allow authenticated users read/write access to transaction items"
+        operation: ALL
+        using: "role() = 'authenticated'"
+      - name: "Allow service role full access to transaction items"
+        operation: ALL
+        using: "role() = 'service_role'"
 
 views:
-  daily_sales:
-    definition: |
-      SELECT
-        DATE(t.transaction_date) as date,
-        COUNT(DISTINCT t.id) as transaction_count,
-        SUM(ti.total_price) as total_revenue,
-        AVG(ti.total_price) as avg_transaction_value
-      FROM transactions t
-      JOIN transaction_items ti ON t.id = ti.transaction_id
-      GROUP BY DATE(t.transaction_date)
-      ORDER BY date
-    rls:
-      enabled: true
-      policies:
-        - name: Allow analytics roles read on daily_sales
-          operation: select
-          using: auth.role() in ('analyst', 'admin', 'service_role')
+  - name: daily_sales
+    definition: "SELECT date_trunc('day', transaction_date) AS sale_date, SUM(total_amount) AS daily_revenue FROM transactions GROUP BY 1 ORDER BY 1"
+    rls_enabled: true
+    policies:
+      - name: "read_daily_sales_analyst_admin"
+        operation: SELECT
+        using: "role() IN ('analyst', 'admin')"
+  
+  - name: product_performance
+    definition: "SELECT p.name AS product_name, b.name AS brand_name, SUM(ti.quantity) AS total_quantity_sold, SUM(ti.total_price) AS total_revenue FROM transaction_items ti JOIN products p ON ti.product_id = p.id JOIN brands b ON p.brand_id = b.id GROUP BY p.name, b.name ORDER BY total_revenue DESC"
+    rls_enabled: true
+    policies:
+      - name: "read_product_performance_analyst_admin"
+        operation: SELECT
+        using: "role() IN ('analyst', 'admin')"
 
-  product_performance:
-    definition: |
-      SELECT
-        p.name as product_name,
-        b.name as brand_name,
-        p.category,
-        SUM(ti.quantity) as units_sold,
-        SUM(ti.total_price) as total_revenue,
-        AVG(ti.unit_price) as avg_price
-      FROM products p
-      JOIN brands b ON p.brand_id = b.id
-      JOIN transaction_items ti ON p.id = ti.product_id
-      JOIN transactions t ON ti.transaction_id = t.id
-      GROUP BY p.name, b.name, p.category
-      ORDER BY total_revenue DESC
-    rls:
-      enabled: true
-      policies:
-        - name: Allow analytics roles read on product_performance
-          operation: select
-          using: auth.role() in ('analyst', 'admin', 'service_role')
+  - name: transactions_fmcg
+    definition: "SELECT * FROM transactions" # Placeholder, actual definition would be complex
+    rls_enabled: true
+    policies:
+      - name: "Allow authenticated users read/write access to transactions_fmcg"
+        operation: ALL
+        using: "role() = 'authenticated'"
+      - name: "Allow service role full access to transactions_fmcg"
+        operation: ALL
+        using: "role() = 'service_role'"
+
+  - name: transaction_items_fmcg
+    definition: "SELECT * FROM transaction_items" # Placeholder, actual definition would be complex
+    rls_enabled: true
+    policies:
+      - name: "Allow authenticated users read/write access to transaction_items_fmcg"
+        operation: ALL
+        using: "role() = 'authenticated'"
+      - name: "Allow service role full access to transaction_items_fmcg"
+        operation: ALL
+        using: "role() = 'service_role'"
 
 functions:
-  get_age_distribution_simple:
-    parameters:
-      - name: filters
-        type: jsonb
-        default: '{}'
-    returns: table
-    language: plpgsql
-    security: definer
+  - name: get_age_distribution_simple
+    parameters: []
+    returns: "jsonb"
+    language: "plpgsql"
+    security: "definer"
     definition: |
-      -- Function definition here (omitted for brevity)
+      -- Placeholder for actual function logic
+      SELECT jsonb_build_object('message', 'Function get_age_distribution_simple not implemented in detail in YAML spec');
+  
+  - name: get_gender_distribution_simple
+    parameters: []
+    returns: "jsonb"
+    language: "plpgsql"
+    security: "definer"
+    definition: |
+      -- Placeholder for actual function logic
+      SELECT jsonb_build_object('message', 'Function get_gender_distribution_simple not implemented in detail in YAML spec');
 
-  get_gender_distribution_simple:
-    parameters:
-      - name: filters
-        type: jsonb
-        default: '{}'
-    returns: table
-    language: plpgsql
-    security: definer
+  - name: get_top_products
+    parameters: []
+    returns: "jsonb"
+    language: "plpgsql"
+    security: "definer"
     definition: |
-      -- Function definition here (omitted for brevity)
+      -- Placeholder for actual function logic
+      SELECT jsonb_build_object('message', 'Function get_top_products not implemented in detail in YAML spec');
 
-  get_top_products:
-    parameters:
-      - name: filters
-        type: jsonb
-        default: '{}'
-    returns: table
-    language: plpgsql
-    security: definer
+  - name: get_income_distribution
+    parameters: []
+    returns: "jsonb"
+    language: "plpgsql"
+    security: "definer"
     definition: |
-      -- Function definition here (omitted for brevity)
+      -- Placeholder for actual function logic
+      SELECT jsonb_build_object('message', 'Function get_income_distribution not implemented in detail in YAML spec');
 
-  get_income_distribution:
-    parameters:
-      - name: filters
-        type: jsonb
-        default: '{}'
-    returns: table
-    language: plpgsql
-    security: definer
+  - name: supabase_catalog_dump
+    parameters: []
+    returns: "jsonb"
+    language: "plpgsql"
+    security: "definer"
     definition: |
-      -- Function definition here (omitted for brevity)
+      -- This function's actual definition is in a migration file,
+      -- This YAML only defines its signature for auditing purposes.
+      DECLARE
+          result jsonb;
+      BEGIN
+          WITH roles AS (
+              SELECT array_agg(rolname) as roles
+              FROM pg_roles
+              WHERE rolname NOT LIKE 'pg_%'
+          ),
+          tables AS (
+              SELECT jsonb_agg(
+                  jsonb_build_object(
+                      'name', t.table_name,
+                      'columns', (
+                          SELECT jsonb_agg(
+                              jsonb_build_object(
+                                  'name', c.column_name,
+                                  'type', c.data_type,
+                                  'is_nullable', c.is_nullable = 'YES',
+                                  'default', c.column_default,
+                                  'is_primary_key', EXISTS (
+                                      SELECT 1
+                                      FROM information_schema.table_constraints tc
+                                      JOIN information_schema.constraint_column_usage ccu
+                                          ON tc.constraint_name = ccu.constraint_name
+                                      WHERE tc.constraint_type = 'PRIMARY KEY'
+                                          AND tc.table_name = t.table_name
+                                          AND ccu.column_name = c.column_name
+                                  )
+                              )
+                          )
+                          FROM information_schema.columns c
+                          WHERE c.table_name = t.table_name
+                          AND c.table_schema = 'public'
+                      ),
+                      'rls_enabled', EXISTS (
+                          SELECT 1
+                          FROM pg_tables
+                          WHERE tablename = t.table_name
+                          AND rowsecurity = true
+                      ),
+                      'policies', (
+                          SELECT jsonb_agg(
+                              jsonb_build_object(
+                                  'name', p.policyname,
+                                  'operation', p.cmd,
+                                  'using', p.qual,
+                                  'with_check', p.with_check
+                              )
+                          )
+                          FROM pg_policies p
+                          WHERE p.tablename = t.table_name
+                          AND p.schemaname = 'public'
+                      )
+                  )
+              ) as tables
+              FROM information_schema.tables t
+              WHERE t.table_schema = 'public'
+              AND t.table_type = 'BASE TABLE'
+          ),
+          views AS (
+              SELECT jsonb_agg(
+                  jsonb_build_object(
+                      'name', v.viewname,
+                      'definition', v.definition,
+                      'rls_enabled', EXISTS (
+                          SELECT 1
+                          FROM pg_views
+                          WHERE viewname = v.viewname
+                          AND schemaname = 'public'
+                      ),
+                      'policies', (
+                          SELECT jsonb_agg(
+                              jsonb_build_object(
+                                  'name', p.policyname,
+                                  'operation', p.cmd,
+                                  'using', p.qual,
+                                  'with_check', p.with_check
+                              )
+                          )
+                          FROM pg_policies p
+                          WHERE p.tablename = v.viewname
+                          AND p.schemaname = 'public'
+                      )
+                  )
+              ) as views
+              FROM pg_views v
+              WHERE v.schemaname = 'public'
+          ),
+          functions AS (
+              SELECT jsonb_agg(
+                  jsonb_build_object(
+                      'name', p.proname,
+                      'parameters', (
+                          SELECT jsonb_agg(
+                              jsonb_build_object(
+                                  'name', pa.parameter_name,
+                                  'type', pa.data_type,
+                                  'default', pa.parameter_default
+                              )
+                          )
+                          FROM information_schema.parameters pa
+                          WHERE pa.specific_name = p.proname
+                      ),
+                      'returns', pg_get_function_result(p.oid),
+                      'language', p.prolang::regproc::text,
+                      'security', CASE WHEN p.prosecdef THEN 'definer' ELSE 'invoker' END
+                  )
+              ) as functions
+              FROM pg_proc p
+              JOIN pg_namespace n ON p.pronamespace = n.oid
+              WHERE n.nspname = 'public'
+          )
+          SELECT jsonb_build_object(
+              'roles', (SELECT roles FROM roles),
+              'tables', (SELECT tables FROM tables),
+              'views', (SELECT views FROM views),
+              'functions', (SELECT functions FROM functions)
+          ) INTO result;
+
+          RETURN result;
+      END;
