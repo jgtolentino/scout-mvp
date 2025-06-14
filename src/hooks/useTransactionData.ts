@@ -50,9 +50,8 @@ export const useTransactionData = () => {
         let offset = 0;
         let hasMore = true;
         
-        while (hasMore) {
-          let query = db
-            .from('transactions_fmcg')
+        let query = db
+          .from('transactions_fmcg')
           .select(`
             id,
             transaction_date,
@@ -79,12 +78,9 @@ export const useTransactionData = () => {
         // Note: barangay, category, brand, store filters removed for simplified query
 
         // Fetch data in batches to get all transactions
-        let offset = 0;
-        let hasMore = true;
-
         while (hasMore) {
           const batchQuery = query
-            .range(offset, offset + batchSize - 1);
+            .range(offset, offset + BATCH_SIZE - 1);
 
           const { data, error: fetchError } = await batchQuery;
 
@@ -99,14 +95,14 @@ export const useTransactionData = () => {
           allTransactions.push(...batchData);
 
           console.log('[Scout Debug] Batch result:', { 
-            batchNumber: Math.floor(offset / batchSize) + 1,
+            batchNumber: Math.floor(offset / BATCH_SIZE) + 1,
             batchSize: batchData.length,
             totalSoFar: allTransactions.length
           });
 
-          // If we got less than batchSize, we've reached the end
-          hasMore = batchData.length === batchSize;
-          offset += batchSize;
+          // If we got less than BATCH_SIZE, we've reached the end
+          hasMore = batchData.length === BATCH_SIZE;
+          offset += BATCH_SIZE;
 
           // Safety limit to prevent infinite loops
           if (offset > 10000) {

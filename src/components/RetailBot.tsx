@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, Bot, User, Sparkles, TrendingUp, Package, MapPin } from 'lucide-react';
-import { useFilterStore } from '@/hooks/useFilterStore';
+import { useFilterStore } from '../store/useFilterStore';
 
 interface Message {
   id: string;
