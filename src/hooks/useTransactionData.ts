@@ -42,8 +42,8 @@ export const useTransactionData = () => {
          *    enrichment call only if the first query succeeds.
          */
 
-        // Fetch transactions in batches to get all 5,000+ records
-        const batchSize = 1000;
+        // Fetch transactions in smaller batches to prevent payload issues
+        const batchSize = 250;
         const allTransactions: Transaction[] = [];
         
         let query = supabase
@@ -53,7 +53,7 @@ export const useTransactionData = () => {
             transaction_date,
             total_amount,
             customer_id,
-            transaction_items (
+            transaction_items_fmcg (
               quantity,
               unit_price,
               products (

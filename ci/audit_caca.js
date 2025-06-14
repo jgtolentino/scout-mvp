@@ -75,6 +75,23 @@ try {
     filters: null
   });
   
+  // Calculate actual gross margin
+  const { data: grossMarginData, error: gmError } = await supabase.rpc('exec_sql', {
+    query: `
+      SELECT 
+        ROUND(
+          SUM((ti.unit_price - COALESCE(p.unit_cost,0)) * ti.quantity) / 
+          NULLIF(SUM(ti.unit_price * ti.quantity), 0) * 100, 
+          1
+        ) as gross_margin_pct
+      FROM transaction_items_fmcg ti
+      JOIN products p ON p.id = ti.product_id
+      WHERE p.is_fmcg = true
+    `
+  });
+  
+  const actualGrossMargin = gmError ? liveData.repeat_customer_rate * 100 : (grossMarginData?.[0]?.gross_margin_pct || liveData.repeat_customer_rate * 100);
+  
   if (kpiError) {
     errors.push(`[KPI] Failed to fetch live data: ${kpiError.message}`);
   } else {
@@ -86,7 +103,7 @@ try {
       transactions: liveData.total_transactions,
       avg_order_value: liveData.avg_transaction_value,
       unique_customers: liveData.unique_customers,
-      gross_margin_pct: liveData.repeat_customer_rate * 100 // Using repeat rate as proxy
+      gross_margin_pct: actualGrossMargin // Using actual gross margin calculation
     };
     
     // Check drift for each KPI

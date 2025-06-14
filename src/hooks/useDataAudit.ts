@@ -69,7 +69,7 @@ export const useDataAudit = () => {
         storeCount,
         brandCount
       ] = await Promise.all([
-        supabase.from('transactions').select('*', { count: 'exact', head: true }),
+        supabase.from('transactions_fmcg').select('*', { count: 'exact', head: true }),
         supabase.from('customers').select('*', { count: 'exact', head: true }),
         supabase.from('products').select('*', { count: 'exact', head: true }),
         supabase.from('stores').select('*', { count: 'exact', head: true }),
@@ -78,7 +78,7 @@ export const useDataAudit = () => {
 
       // 2. Get transaction data for validation
       const { data: transactions } = await supabase
-        .from('transactions')
+        .from('transactions_fmcg')
         .select('id, total_amount, transaction_date, customer_id, store_id');
 
       if (!transactions) {
@@ -90,7 +90,7 @@ export const useDataAudit = () => {
       
       // Get database aggregate
       const { data: aggregateData } = await supabase
-        .from('transactions')
+        .from('transactions_fmcg')
         .select('total_amount.sum()');
 
       const databaseTotal = aggregateData?.[0]?.sum || 0;
@@ -126,7 +126,7 @@ export const useDataAudit = () => {
 
       // 8. Get category and brand distribution
       const { data: categoryData } = await supabase
-        .from('transaction_items')
+        .from('transaction_items_fmcg')
         .select(`
           products!inner (
             category
@@ -134,7 +134,7 @@ export const useDataAudit = () => {
         `);
 
       const { data: brandData } = await supabase
-        .from('transaction_items')
+        .from('transaction_items_fmcg')
         .select(`
           products!inner (
             brands!inner (

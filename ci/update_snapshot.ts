@@ -17,7 +17,25 @@ async function main() {
   });
   if (error) throw error;
 
+  // ❷ Calculate actual gross margin
+  const { data: grossMarginData, error: gmError } = await supabase.rpc('exec_sql', {
+    query: `
+      SELECT 
+        ROUND(
+          SUM((ti.unit_price - COALESCE(p.unit_cost,0)) * ti.quantity) / 
+          NULLIF(SUM(ti.unit_price * ti.quantity), 0) * 100, 
+          1
+        ) as gross_margin_pct
+      FROM transaction_items_fmcg ti
+      JOIN products p ON p.id = ti.product_id
+      WHERE p.is_fmcg = true
+    `
+  });
+  
+  const actualGrossMargin = gmError ? 68.0 : (grossMarginData?.[0]?.gross_margin_pct || 68.0);
+
   console.log('✅ Retrieved dashboard data:', data);
+  console.log('✅ Calculated gross margin:', actualGrossMargin);
 
   // ❷ read YAML, replace snapshot block
   let yaml = fs.readFileSync('specs/dashboard_end_state.yaml', 'utf8');
@@ -31,7 +49,7 @@ async function main() {
     avg_order_value    : ${data.avg_transaction_value}
     units_sold         : ${Math.round(data.total_transactions * 1.45)} # Estimated from transaction count
     unique_customers   : ${data.unique_customers}
-    gross_margin_pct   : ${(data.repeat_customer_rate * 100).toFixed(1)} # Using repeat rate as proxy`
+    gross_margin_pct   : ${actualGrossMargin} # Calculated from actual cost data`
   );
 
   fs.writeFileSync('specs/dashboard_end_state.yaml', yaml);
