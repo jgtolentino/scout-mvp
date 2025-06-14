@@ -11,7 +11,7 @@ meta:
   owner: pulser/edge
   status: production-ready
   data_sources:
-    - supabase[transactions]
+    - supabase[transactions_fmcg]
     - supabase[transaction_items]
     - supabase[stores]
     - supabase[products]
@@ -47,7 +47,7 @@ components:
     col_span: 1
     sql: |
       SELECT COALESCE(SUM(total_amount),0) AS value
-      FROM transactions
+      FROM transactions_fmcg
       WHERE {{ global_filters }};
 
     delta:
@@ -55,12 +55,12 @@ components:
       sql: |
         WITH cur AS (
           SELECT SUM(total_amount) v
-          FROM transactions
+          FROM transactions_fmcg
           WHERE transaction_date BETWEEN {{period_start}} AND {{period_end}}
         ),
         prev AS (
           SELECT SUM(total_amount) v
-          FROM transactions
+          FROM transactions_fmcg
           WHERE transaction_date BETWEEN {{period_start_prev}} AND {{period_end_prev}}
         )
         SELECT ROUND( (cur.v-prev.v)/NULLIF(prev.v,0)*100 ,1) AS pct
@@ -73,7 +73,7 @@ components:
     format: "0,0"
     col_span: 1
     sql: |
-      SELECT COUNT(*) FROM transactions WHERE {{ global_filters }};
+      SELECT COUNT(*) FROM transactions_fmcg WHERE {{ global_filters }};
     delta: { basis: prev_28d, sql: "*kpi_total_revenue.delta.sql" }
 
   - id: kpi_aov
@@ -84,7 +84,7 @@ components:
     col_span: 1
     sql: |
       SELECT COALESCE(AVG(total_amount),0)
-      FROM transactions
+      FROM transactions_fmcg
       WHERE {{ global_filters }};
     delta: { basis: prev_28d, sql: "*kpi_total_revenue.delta.sql" }
 
@@ -97,7 +97,7 @@ components:
     sql: |
       SELECT COALESCE(SUM(ti.quantity),0)
       FROM transaction_items ti
-      JOIN transactions t ON t.id = ti.transaction_id
+      JOIN transactions_fmcg t ON t.id = ti.transaction_id
       WHERE {{ global_filters }};
     delta: { basis: prev_28d, sql: "*kpi_total_revenue.delta.sql" }
 
@@ -109,7 +109,7 @@ components:
     col_span: 1
     sql: |
       SELECT COUNT(DISTINCT customer_id)
-      FROM transactions
+      FROM transactions_fmcg
       WHERE {{ global_filters }};
     delta: { basis: prev_28d, sql: "*kpi_total_revenue.delta.sql" }
 
@@ -125,7 +125,7 @@ components:
                SUM(t.total_amount)                                     AS rev
         FROM transaction_items ti
         JOIN products p  ON p.id = ti.product_id
-        JOIN transactions t ON t.id = ti.transaction_id
+        JOIN transactions_fmcg t ON t.id = ti.transaction_id
         WHERE {{ global_filters }}
       )
       SELECT ROUND(gm/NULLIF(rev,0)*100,1) FROM x;
@@ -143,7 +143,7 @@ components:
     sql: |
       SELECT DATE(transaction_date) AS label,
              SUM(total_amount)      AS value
-      FROM transactions
+      FROM transactions_fmcg
       WHERE transaction_date >= NOW()-INTERVAL '30 day'
       AND {{ global_filters }}
       GROUP BY 1
@@ -160,7 +160,7 @@ components:
              SUM(ti.unit_price*ti.quantity) AS value
       FROM transaction_items ti
       JOIN products p ON p.id = ti.product_id
-      JOIN transactions t ON t.id = ti.transaction_id
+      JOIN transactions_fmcg t ON t.id = ti.transaction_id
       WHERE {{ global_filters }}
       GROUP BY 1
       ORDER BY value DESC
@@ -176,7 +176,7 @@ components:
     sql: |
       SELECT s.region AS label,
              SUM(t.total_amount) AS value
-      FROM transactions t
+      FROM transactions_fmcg t
       JOIN stores s ON s.id = t.store_id
       WHERE {{ global_filters }}
       GROUP BY 1;
@@ -209,6 +209,52 @@ components:
     datasource: table/actions
     columns: [priority, title, impact_estimate, owner, due_date]
     col_span: 2
+
+# ─────────────── CHAT BOT (GLOBAL + PAGE) ────────────────
+  # Docked widget visible on **all** pages (bottom-right, collapsible)
+  - id: widget_retail_bot
+    type: chat_bot
+    title: "Scout Retail Bot"
+    datasource: edge_function/azure_retail_bot_stream
+    mode: floating            # dashboard runtime mounts as fixed widget
+    position: bottom-right
+    props:
+      max_height: 24rem
+      width: 20rem
+      z_index: 50
+
+# ───────────────────────── Pages ───────────────────────────
+
+pages:
+  - id: overview
+    path: "/"
+    title: "Overview"
+    components:
+      - kpi_total_revenue
+      - kpi_transactions
+      - kpi_aov
+      - kpi_units_sold
+      - kpi_unique_customers
+      - kpi_gross_margin_pct
+      - chart_revenue_trend
+      - chart_category_perf
+      - chart_region_dist
+      - panel_ai_insights
+      - panel_data_quality
+      - board_action_items
+
+  - id: chat
+    path: "/chat"
+    title: "Chat"
+    components:
+      - id: page_retail_bot
+        type: chat_bot
+        title: "Scout Retail Bot"
+        datasource: edge_function/azure_retail_bot_stream
+        props:
+          full_screen: true
+          show_header: true
+          enable_export: true
 
 # ───────────────────────── Filters ─────────────────────────
 

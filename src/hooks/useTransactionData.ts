@@ -44,7 +44,7 @@ export const useTransactionData = () => {
         const allTransactions: Transaction[] = [];
         
         let query = supabase
-          .from('transactions')
+          .from('transactions_fmcg')
           .select(`
             id,
             transaction_date,

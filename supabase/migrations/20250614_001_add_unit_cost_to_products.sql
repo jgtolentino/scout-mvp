@@ -12,17 +12,17 @@ COMMENT ON COLUMN products.unit_cost IS 'Cost per unit for gross margin calculat
 -- Update existing products with sample unit costs (20-80% of typical retail prices)
 UPDATE products 
 SET unit_cost = CASE 
-  WHEN category = 'Electronics' THEN ROUND(RANDOM() * 15000 + 5000, 2)  -- ₱5,000 - ₱20,000
-  WHEN category = 'Clothing' THEN ROUND(RANDOM() * 800 + 200, 2)       -- ₱200 - ₱1,000
-  WHEN category = 'Food' THEN ROUND(RANDOM() * 150 + 50, 2)            -- ₱50 - ₱200
-  WHEN category = 'Books' THEN ROUND(RANDOM() * 300 + 100, 2)          -- ₱100 - ₱400
-  WHEN category = 'Home & Garden' THEN ROUND(RANDOM() * 1200 + 300, 2) -- ₱300 - ₱1,500
-  WHEN category = 'Sports' THEN ROUND(RANDOM() * 2000 + 500, 2)        -- ₱500 - ₱2,500
-  WHEN category = 'Beauty' THEN ROUND(RANDOM() * 400 + 100, 2)         -- ₱100 - ₱500
-  WHEN category = 'Toys' THEN ROUND(RANDOM() * 600 + 200, 2)           -- ₱200 - ₱800
-  WHEN category = 'Automotive' THEN ROUND(RANDOM() * 5000 + 1000, 2)   -- ₱1,000 - ₱6,000
-  WHEN category = 'Health' THEN ROUND(RANDOM() * 300 + 50, 2)          -- ₱50 - ₱350
-  ELSE ROUND(RANDOM() * 500 + 100, 2)                                  -- Default: ₱100 - ₱600
+  WHEN category = 'Electronics' THEN ROUND((RANDOM() * 15000 + 5000)::numeric, 2)  -- ₱5,000 - ₱20,000
+  WHEN category = 'Clothing' THEN ROUND((RANDOM() * 800 + 200)::numeric, 2)       -- ₱200 - ₱1,000
+  WHEN category = 'Food' THEN ROUND((RANDOM() * 150 + 50)::numeric, 2)            -- ₱50 - ₱200
+  WHEN category = 'Books' THEN ROUND((RANDOM() * 300 + 100)::numeric, 2)          -- ₱100 - ₱400
+  WHEN category = 'Home & Garden' THEN ROUND((RANDOM() * 1200 + 300)::numeric, 2) -- ₱300 - ₱1,500
+  WHEN category = 'Sports' THEN ROUND((RANDOM() * 2000 + 500)::numeric, 2)        -- ₱500 - ₱2,500
+  WHEN category = 'Beauty' THEN ROUND((RANDOM() * 400 + 100)::numeric, 2)         -- ₱100 - ₱500
+  WHEN category = 'Toys' THEN ROUND((RANDOM() * 600 + 200)::numeric, 2)           -- ₱200 - ₱800
+  WHEN category = 'Automotive' THEN ROUND((RANDOM() * 5000 + 1000)::numeric, 2)   -- ₱1,000 - ₱6,000
+  WHEN category = 'Health' THEN ROUND((RANDOM() * 300 + 50)::numeric, 2)          -- ₱50 - ₱350
+  ELSE ROUND((RANDOM() * 500 + 100)::numeric, 2)                                  -- Default: ₱100 - ₱600
 END
 WHERE unit_cost = 0.00 OR unit_cost IS NULL;
 
