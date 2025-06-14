@@ -8,34 +8,48 @@ const Chat: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+      {/* TBWA Header */}
       <div className="text-center mb-8">
-        <div className="flex items-center justify-center mb-4">
-          <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
-            <Bot className="w-8 h-8 text-white" />
+        <div className="flex items-center justify-center mb-6">
+          <div className="w-20 h-20 tbwa-gradient rounded-3xl flex items-center justify-center shadow-xl">
+            <Bot className="w-10 h-10 text-white" />
           </div>
         </div>
-        <div className="flex items-center justify-center space-x-4 mb-4">
-          <h1 className="text-3xl font-bold text-gray-900">
+        <div className="flex items-center justify-center space-x-4 mb-6">
+          <h1 className="text-4xl font-bold text-tbwa-navy">
             Scout AI Retail Assistant
           </h1>
           <button
             onClick={() => setUseEnhanced(!useEnhanced)}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+            className={`px-6 py-3 rounded-xl text-sm font-semibold transition-all ${
               useEnhanced 
-                ? 'bg-purple-600 text-white shadow-lg transform scale-105' 
-                : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
+                ? 'tbwa-btn-primary shadow-lg transform scale-105' 
+                : 'tbwa-btn-secondary hover:shadow-md'
             }`}
           >
             {useEnhanced ? '🚀 Enhanced AI' : '📊 Standard Mode'}
           </button>
         </div>
-        <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+        <p className="text-lg text-gray-600 max-w-3xl mx-auto leading-relaxed">
           {useEnhanced 
-            ? 'Advanced AI platform for Philippine FMCG intelligence with predictive analytics and strategic insights.'
-            : 'Your intelligent companion for Philippine FMCG market analysis. Ask questions about revenue, brands, regions, and get instant insights.'
+            ? 'Advanced AI platform for Philippine FMCG intelligence with predictive analytics, TBWA brand insights, and strategic recommendations powered by real-time data.'
+            : 'Your intelligent companion for Philippine FMCG market analysis. Ask questions about revenue, brands, regions, and get instant insights from our comprehensive dataset.'
           }
         </p>
+        <div className="mt-4 flex items-center justify-center space-x-6 text-sm text-gray-500">
+          <div className="flex items-center space-x-2">
+            <div className="w-2 h-2 bg-tbwa-yellow rounded-full"></div>
+            <span>Real-time Data</span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <div className="w-2 h-2 bg-tbwa-navy rounded-full"></div>
+            <span>TBWA Intelligence</span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+            <span>Live Analytics</span>
+          </div>
+        </div>
       </div>
 
       {/* Feature Cards */}

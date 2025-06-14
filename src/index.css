@@ -1,6 +1,131 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* TBWA Brand Variables */
+:root {
+  --tbwa-navy: #003865;
+  --tbwa-yellow: #FFC72C;
+  --tbwa-navy-50: #f0f7ff;
+  --tbwa-navy-100: #e0efff;
+  --tbwa-navy-900: #003865;
+  --tbwa-yellow-50: #fffdf0;
+  --tbwa-yellow-500: #FFC72C;
+}
+
+/* Base TBWA Typography */
+@layer base {
+  html {
+    font-family: 'Inter', system-ui, sans-serif;
+    font-feature-settings: 'cv11', 'ss01';
+    font-variation-settings: 'opsz' 32;
+  }
+  
+  body {
+    @apply bg-neutral text-brandText font-sans antialiased;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-semibold text-tbwa-navy;
+  }
+  
+  .tbwa-gradient {
+    background: linear-gradient(135deg, var(--tbwa-navy) 0%, var(--tbwa-yellow) 100%);
+  }
+  
+  .tbwa-text-gradient {
+    background: linear-gradient(135deg, var(--tbwa-navy) 0%, var(--tbwa-yellow) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+}
+
+/* TBWA Component Styles */
+@layer components {
+  .tbwa-card {
+    @apply bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200;
+  }
+  
+  .tbwa-btn-primary {
+    @apply bg-tbwa-navy hover:bg-tbwa-navy-800 text-white font-medium px-4 py-2 rounded-lg transition-colors duration-200;
+  }
+  
+  .tbwa-btn-secondary {
+    @apply bg-tbwa-yellow hover:bg-tbwa-yellow-600 text-tbwa-navy font-medium px-4 py-2 rounded-lg transition-colors duration-200;
+  }
+  
+  .tbwa-badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-tbwa-navy-50 text-tbwa-navy;
+  }
+  
+  .tbwa-badge-yellow {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-tbwa-yellow-50 text-tbwa-navy;
+  }
+  
+  .tbwa-filter-chip {
+    @apply inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-white border border-gray-300 hover:border-tbwa-navy-300 hover:bg-tbwa-navy-50 transition-colors duration-200 cursor-pointer;
+  }
+  
+  .tbwa-filter-chip-active {
+    @apply bg-tbwa-navy text-white border-tbwa-navy;
+  }
+  
+  .tbwa-kpi-card {
+    @apply bg-white rounded-xl border border-gray-200 p-6 shadow-sm hover:shadow-md transition-all duration-200;
+  }
+  
+  .tbwa-metric-value {
+    @apply text-2xl font-bold text-tbwa-navy;
+  }
+  
+  .tbwa-metric-label {
+    @apply text-sm font-medium text-gray-600 uppercase tracking-wide;
+  }
+  
+  .tbwa-chart-card {
+    @apply bg-white rounded-xl border border-gray-200 p-6 shadow-sm;
+  }
+  
+  .tbwa-sidebar {
+    @apply bg-white border-r border-gray-200 shadow-sm;
+  }
+  
+  .tbwa-nav-item {
+    @apply flex items-center px-4 py-3 text-gray-700 hover:bg-tbwa-navy-50 hover:text-tbwa-navy rounded-lg transition-colors duration-200;
+  }
+  
+  .tbwa-nav-item-active {
+    @apply bg-tbwa-navy text-white;
+  }
+  
+  .tbwa-header {
+    @apply bg-white border-b border-gray-200 shadow-sm;
+  }
+  
+  .tbwa-brand-highlight {
+    @apply relative;
+  }
+  
+  .tbwa-brand-highlight::before {
+    content: '';
+    @apply absolute -left-2 top-0 bottom-0 w-1 bg-tbwa-yellow rounded-full;
+  }
+}
+
+/* TBWA Category Icons */
+@layer utilities {
+  .category-beverages::before { content: '🧃'; }
+  .category-snacks::before { content: '🍿'; }
+  .category-dairy::before { content: '🥛'; }
+  .category-personal-care::before { content: '🧴'; }
+  .category-household::before { content: '🧼'; }
+  .category-canned-goods::before { content: '🥫'; }
+  .category-condiments::before { content: '🍅'; }
+  .category-default::before { content: '📦'; }
+}
 
 /* Responsive scaling and zoom support */
 :root {

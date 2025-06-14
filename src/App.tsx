@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { useFilterStore } from './store/useFilterStore';
+import { LayoutWrapper } from './components/LayoutWrapper';
 import Sidebar from './components/layout/Sidebar';
 import GlobalFilterBar from './components/filters/GlobalFilterBar';
 import Overview from './pages/Overview';
@@ -26,29 +27,31 @@ function App() {
   }, [initializeFromURL]);
 
   return (
-    <div className="dashboard-container min-h-screen bg-gray-50">
-      <div className="filter-bar">
-        <GlobalFilterBar />
-      </div>
-      
-      <div className="flex">
-        <Sidebar />
+    <LayoutWrapper>
+      <div className="dashboard-container">
+        <div className="filter-bar">
+          <GlobalFilterBar />
+        </div>
         
-        <main className="flex-1 lg:ml-64 p-6">
-          <Routes>
-            <Route path="/" element={<Overview />} />
-            <Route path="/trends" element={<TransactionTrends />} />
-            <Route path="/products" element={<ProductMix />} />
-            <Route path="/consumers" element={<ConsumerInsights />} />
-            <Route path="/transactions" element={<AllTransactions />} />
-            <Route path="/chat" element={<Chat />} />
-          </Routes>
-        </main>
+        <div className="flex">
+          <Sidebar />
+          
+          <main className="flex-1 lg:ml-64 p-6">
+            <Routes>
+              <Route path="/" element={<Overview />} />
+              <Route path="/trends" element={<TransactionTrends />} />
+              <Route path="/products" element={<ProductMix />} />
+              <Route path="/consumers" element={<ConsumerInsights />} />
+              <Route path="/transactions" element={<AllTransactions />} />
+              <Route path="/chat" element={<Chat />} />
+            </Routes>
+          </main>
+        </div>
+        
+        {/* Global chat widget */}
+        <ChatLauncher />
       </div>
-      
-      {/* Global chat widget */}
-      <ChatLauncher />
-    </div>
+    </LayoutWrapper>
   );
 }
 

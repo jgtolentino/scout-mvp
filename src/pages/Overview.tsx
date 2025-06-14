@@ -63,12 +63,29 @@ const Overview: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg p-6 text-white">
-        <h1 className="dashboard-title font-bold mb-2">Executive Dashboard</h1>
-        <p className="text-blue-100">
-          Real-time insights from {kpiData.totalTransactions.toLocaleString()} transactions
-        </p>
+      {/* TBWA Header */}
+      <div className="tbwa-gradient rounded-xl p-8 text-white shadow-lg">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold mb-2">Executive Dashboard</h1>
+            <p className="text-tbwa-navy-100 text-lg">
+              Real-time insights from {kpiData.totalTransactions.toLocaleString()} FMCG transactions
+            </p>
+            <div className="mt-3 flex items-center space-x-4">
+              <div className="tbwa-badge-yellow">
+                ⭐ TBWA Portfolio
+              </div>
+              <div className="text-sm text-tbwa-navy-100">
+                Philippine Retail Intelligence
+              </div>
+            </div>
+          </div>
+          <div className="hidden lg:block">
+            <div className="w-20 h-20 bg-tbwa-yellow rounded-2xl flex items-center justify-center">
+              <TrendingUp className="w-10 h-10 text-tbwa-navy" />
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Enhanced KPI Row with 6 Cards */}
@@ -80,7 +97,8 @@ const Overview: React.FC = () => {
         <div className="lg:col-span-2">
           <ChartCard
             title="Revenue Trend"
-            subtitle="Daily revenue over time"
+            subtitle="Daily revenue performance across Philippine markets"
+            variant="featured"
           >
             <LineChart
               data={timeSeriesData}
