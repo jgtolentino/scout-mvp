@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Calendar, MapPin, Package, Tag, Store, Filter, X } from 'lucide-react';
 import { useFilterStore } from '../../store/useFilterStore';
 import { format } from 'date-fns';
-import { supabase } from '../../lib/supabase';
+import { getDataProvider } from '../../lib/dataProvider';
 
 const GlobalFilterBar: React.FC = () => {
   const [isExpanded, setIsExpanded] = useState(false);
