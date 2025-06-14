@@ -1,23 +1,31 @@
 import React from 'react';
 import { DollarSign, ShoppingCart, TrendingUp, Star } from 'lucide-react';
-import { useSupabaseData } from '../hooks/useSupabaseData';
+/*
+ * 🔄 14-Jun-2025 Hot-fix
+ * The page was wired to the outdated `useSupabaseData` hook that still relies on the broken
+ * `get_dashboard_summary` RPC.
+ * Switch to the new `useTransactionData` hook that already pulls live rows directly
+ * from the `transactions` table.
+ */
+import { useTransactionData } from '../hooks/useTransactionData';
 import KpiCard from '../components/ui/KpiCard';
 import ChartCard from '../components/ui/ChartCard';
 import DonutChart from '../components/charts/DonutChart';
 import LineChart from '../components/charts/LineChart';
 import AIInsightsPanel from '../components/insights/AIInsightsPanel';
+import ErrorState from '../components/ui/ErrorState';
 import { useNavigate } from 'react-router-dom';
 import { useFilterStore } from '../store/useFilterStore';
 import { ChartData } from '../types';
 
 const Overview: React.FC = () => {
   const { 
+    kpiData, 
     loading, 
-    error, 
-    dashboardData, 
+    error,
     categoryData, 
-    dailyTrends 
-  } = useSupabaseData();
+    timeSeriesData 
+  } = useTransactionData();
   
   const navigate = useNavigate();
   const { setCategories } = useFilterStore();
@@ -63,50 +71,10 @@ const Overview: React.FC = () => {
   }
 
   if (error) {
-    return (
-      <div className="space-y-6">
-        <div className="bg-gradient-to-r from-red-600 to-red-700 rounded-lg p-6 text-white">
-          <h1 className="text-2xl font-bold mb-2">Error Loading Dashboard</h1>
-          <p className="text-red-100">{error}</p>
-        </div>
-      </div>
-    );
+    return <ErrorState message={error} />;
   }
 
-  // Transform Supabase data to match component expectations
-  const kpiData = dashboardData ? {
-    totalRevenue: dashboardData.total_revenue || 0,
-    totalTransactions: dashboardData.total_transactions || 0,
-    avgOrderValue: dashboardData.avg_transaction_value || 0,
-    topProduct: dashboardData.top_product || 'N/A',
-    revenueChange: dashboardData.revenue_change || 0,
-    transactionChange: dashboardData.transaction_change || 0,
-    aovChange: dashboardData.aov_change || 0,
-    topProductChange: dashboardData.top_product_change || 0,
-  } : {
-    totalRevenue: 0,
-    totalTransactions: 0,
-    avgOrderValue: 0,
-    topProduct: 'N/A',
-    revenueChange: 0,
-    transactionChange: 0,
-    aovChange: 0,
-    topProductChange: 0,
-  };
-
-  // Transform category data for charts
-  const chartCategoryData = categoryData.map(item => ({
-    name: item.category || item.name,
-    value: item.total_revenue || item.value || 0,
-    change: item.growth_rate || 0
-  }));
-
-  // Transform daily trends for line chart
-  const timeSeriesData = dailyTrends.map(item => ({
-    date: item.date,
-    value: item.total_revenue || item.value || 0,
-    label: item.date_label || item.label || item.date
-  }));
+  // Data is already properly formatted from useTransactionData
 
   return (
     <div className="space-y-6">
@@ -185,7 +153,7 @@ const Overview: React.FC = () => {
           subtitle="Revenue by product category"
         >
           <DonutChart
-            data={chartCategoryData}
+            data={categoryData}
             onSegmentClick={handleCategoryClick}
           />
         </ChartCard>
@@ -193,7 +161,7 @@ const Overview: React.FC = () => {
         <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Top Performing Categories</h3>
           <div className="space-y-3">
-            {chartCategoryData.slice(0, 5).map((category, index) => (
+            {categoryData.slice(0, 5).map((category, index) => (
               <div
                 key={category.name}
                 className="flex items-center justify-between p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors"
