@@ -1,31 +1,29 @@
 # ===========================================================
 # Scout Analytics – Desired End-State Dashboard Specification
-# Version: 2025-06-14-alpha
-# Format: Pulser-compatible YAML (machine-readable, CI-verifiable)
-# -----------------------------------------------------------
-# All UI/UX, data contracts, and KPI formulas are defined
-# here. Runtime services must assert that every component
-# listed below resolves without error before the release
-# pipeline can pass.
+# Revision: 2025-06-14-r2
+# NOTE: canonical file — overwrite any earlier copies
 # ===========================================================
+
 meta:
   dashboard_id: scout-analytics-mvp
   name: "Scout Analytics – Philippine Retail Intelligence"
   route: "/"
-  owner: pulser/edge # primary agent responsible
+  owner: pulser/edge
   status: production-ready
   data_sources:
     - supabase[transactions]
+    - supabase[transaction_items]
     - supabase[stores]
     - supabase[products]
     - supabase[customers]
-    - supabase[inventory] # created 2025-06-14
-    - edge_function[track_event] # optional
-    - edge_function[geocode_address] # optional
+    - supabase[inventory]               # 2025-06-14
+    - edge_function[track_event]        # optional
+    - edge_function[geocode_address]    # optional
+    - edge_function[azure_openai_stream]
 
 layout:
   viewport:
-    min-width: 320 # px
+    min_width: 320
     breakpoints: [sm, md, lg, xl]
   grid:
     columns:
@@ -35,146 +33,131 @@ layout:
       xl: 4
     gap: 1rem
 
+# ───────────────────────── Components ───────────────────────
+
 components:
-  # ────────────────────── KPI ROW ─────────────────────────
+
+  # KPI ROW --------------------------------------------------
+
   - id: kpi_total_revenue
     type: kpi
     title: "Total Revenue"
     unit: currency
     format: "₱0,0.00"
-    formula: |
+    col_span: 1
+    sql: |
       SELECT COALESCE(SUM(total_amount),0) AS value
       FROM transactions
       WHERE {{ global_filters }};
+
     delta:
       basis: prev_28d
-      formula: |
-        WITH curr AS (
-          SELECT SUM(total_amount) AS v
+      sql: |
+        WITH cur AS (
+          SELECT SUM(total_amount) v
           FROM transactions
-          WHERE transaction_date >= {{period_start}}
-          AND transaction_date <= {{period_end}}
+          WHERE transaction_date BETWEEN {{period_start}} AND {{period_end}}
         ),
         prev AS (
-          SELECT SUM(total_amount) AS v
+          SELECT SUM(total_amount) v
           FROM transactions
-          WHERE transaction_date >= {{period_start_prev}}
-          AND transaction_date <= {{period_end_prev}}
+          WHERE transaction_date BETWEEN {{period_start_prev}} AND {{period_end_prev}}
         )
-        SELECT ROUND( (curr.v - prev.v) / NULLIF(prev.v,0) * 100, 1) AS pct
-        FROM curr, prev;
-    layout:
-      col_span: 1
+        SELECT ROUND( (cur.v-prev.v)/NULLIF(prev.v,0)*100 ,1) AS pct
+        FROM cur,prev;
 
   - id: kpi_transactions
     type: kpi
     title: "Transactions"
     unit: count
     format: "0,0"
-    formula: |
+    col_span: 1
+    sql: |
       SELECT COUNT(*) FROM transactions WHERE {{ global_filters }};
-    delta: 
-      basis: prev_28d
-      formula: same-as-revenue
-    layout: 
-      col_span: 1
+    delta: { basis: prev_28d, sql: "*kpi_total_revenue.delta.sql" }
 
   - id: kpi_aov
     type: kpi
     title: "Avg Order Value"
     unit: currency
     format: "₱0,0.00"
-    formula: |
+    col_span: 1
+    sql: |
       SELECT COALESCE(AVG(total_amount),0)
       FROM transactions
       WHERE {{ global_filters }};
-    delta: 
-      basis: prev_28d
-      formula: same-as-revenue
-    layout: 
-      col_span: 1
+    delta: { basis: prev_28d, sql: "*kpi_total_revenue.delta.sql" }
 
   - id: kpi_units_sold
     type: kpi
     title: "Units Sold"
     unit: count
     format: "0,0"
-    formula: |
-      SELECT COALESCE(SUM(item.quantity),0)
-      FROM transaction_items item
-      JOIN transactions t USING (transaction_id)
+    col_span: 1
+    sql: |
+      SELECT COALESCE(SUM(ti.quantity),0)
+      FROM transaction_items ti
+      JOIN transactions t ON t.id = ti.transaction_id
       WHERE {{ global_filters }};
-    delta: 
-      basis: prev_28d
-      formula: same-as-revenue
-    layout: 
-      col_span: 1
+    delta: { basis: prev_28d, sql: "*kpi_total_revenue.delta.sql" }
 
   - id: kpi_unique_customers
     type: kpi
     title: "Unique Customers"
     unit: count
     format: "0,0"
-    formula: |
+    col_span: 1
+    sql: |
       SELECT COUNT(DISTINCT customer_id)
       FROM transactions
       WHERE {{ global_filters }};
-    delta: 
-      basis: prev_28d
-      formula: same-as-revenue
-    layout: 
-      col_span: 1
+    delta: { basis: prev_28d, sql: "*kpi_total_revenue.delta.sql" }
 
   - id: kpi_gross_margin_pct
     type: kpi
     title: "Gross Margin %"
     unit: percent
     format: "0.0 %"
-    formula: |
-      WITH line AS (
-        SELECT SUM((ti.unit_price - COALESCE(p.unit_cost,0))*ti.quantity) AS gm,
-               SUM(t.total_amount) AS rev
+    col_span: 1
+    sql: |
+      WITH x AS (
+        SELECT SUM((ti.unit_price-COALESCE(p.unit_cost,0))*ti.quantity) AS gm,
+               SUM(t.total_amount)                                     AS rev
         FROM transaction_items ti
-        JOIN products p ON p.id = ti.product_id
+        JOIN products p  ON p.id = ti.product_id
         JOIN transactions t ON t.id = ti.transaction_id
         WHERE {{ global_filters }}
       )
-      SELECT ROUND( gm / NULLIF(rev,0) * 100, 1 ) FROM line;
-    delta: 
-      basis: prev_28d
-      formula: same-as-revenue
-    layout: 
-      col_span: 1
+      SELECT ROUND(gm/NULLIF(rev,0)*100,1) FROM x;
+    delta: { basis: prev_28d, sql: "*kpi_total_revenue.delta.sql" }
 
-  # ────────────────── ANALYTICS VISUALS ───────────────────
+  # VISUALS --------------------------------------------------
+
   - id: chart_revenue_trend
     type: chart
-    title: "Revenue Trend – Last 30 days"
-    chart_type: line
-    measures: [total_amount]
-    dimension: transaction_date::date
-    query: |
-      SELECT DATE(transaction_date) AS date,
-             SUM(total_amount) AS value
+    title: "Revenue Trend (30 days)"
+    chart: line
+    col_span: 2
+    min_height: 18rem
+    lazy_load: false
+    sql: |
+      SELECT DATE(transaction_date) AS label,
+             SUM(total_amount)      AS value
       FROM transactions
-      WHERE transaction_date >= NOW() - INTERVAL '30 days'
+      WHERE transaction_date >= NOW()-INTERVAL '30 day'
       AND {{ global_filters }}
       GROUP BY 1
       ORDER BY 1;
-    layout: 
-      col_span: 2
-      min_height: 18rem
-      lazy_load: false
 
-  - id: chart_category_performance
+  - id: chart_category_perf
     type: chart
     title: "Category Performance"
-    chart_type: donut
-    measures: [revenue]
-    dimension: products.category
-    query: |
+    chart: donut
+    col_span: 1
+    lazy_load: true
+    sql: |
       SELECT p.category AS label,
-             SUM(ti.unit_price * ti.quantity) AS value
+             SUM(ti.unit_price*ti.quantity) AS value
       FROM transaction_items ti
       JOIN products p ON p.id = ti.product_id
       JOIN transactions t ON t.id = ti.transaction_id
@@ -182,70 +165,57 @@ components:
       GROUP BY 1
       ORDER BY value DESC
       LIMIT 6;
-    layout: 
-      col_span: 1
-      lazy_load: true
 
-  - id: chart_region_distribution
+  - id: chart_region_dist
     type: chart
     title: "Regional Distribution"
-    chart_type: geo
-    dimension: stores.region
-    measures: [revenue]
-    query: |
-      SELECT s.region AS region,
-             SUM(t.total_amount) AS revenue
+    chart: geo
+    col_span: 1
+    lazy_load: true
+    mobile_fallback: ranked_table
+    sql: |
+      SELECT s.region AS label,
+             SUM(t.total_amount) AS value
       FROM transactions t
       JOIN stores s ON s.id = t.store_id
       WHERE {{ global_filters }}
       GROUP BY 1;
-    layout: 
-      col_span: 1
-      lazy_load: true
-      mobile_fallback: "ranked_table"
 
-  # ────────────────────── AI INSIGHTS ─────────────────────
+  # AI INSIGHTS ---------------------------------------------
+
   - id: panel_ai_insights
     type: insight_panel
     title: "AI-Powered Insights"
-    datasource: edge_function/azure_openai_stream        # token-streaming
+    datasource: edge_function/azure_openai_stream   # streaming
     props:
       max_items: 3
       show_confidence: true
-    layout: 
-      col_span: 1
+    col_span: 1
 
-  # ──────────────── DATA QUALITY MONITOR ─────────────────
+  # DATA QUALITY --------------------------------------------
+
   - id: panel_data_quality
     type: quality_audit
-    title: "Data Quality & Audit Validation"
+    title: "Data Quality Audit"
     datasource: view/data_quality_audit
-    threshold: 95 # %
-    layout: 
-      col_span: 2
+    threshold: 95
+    col_span: 2
 
-  # ────────────────── ACTION ITEMS BOARD ─────────────────
+  # ACTION BOARD -------------------------------------------
+
   - id: board_action_items
     type: action_board
-    title: "Prioritised Action Items"
+    title: "Prioritised Actions"
     datasource: table/actions
     columns: [priority, title, impact_estimate, owner, due_date]
-    layout: 
-      col_span: 2
+    col_span: 2
 
-# =========================================================
-# Global Filters Definition
-# ---------------------------------------------------------
-# Each page mounts <GlobalFilters/> which updates the
-# reactive store filters. Placeholders above are
-# substituted by the runtime query builder.
-# =========================================================
-filters_schema:
-  date_range: 
-    from: date|null
-    to: date|null
-  barangays: string[]
-  regions: string[]
-  categories: string[]
-  brands: string[]
-  stores: string[]
+# ───────────────────────── Filters ─────────────────────────
+
+global_filters:
+  date_range: { from: date|null, to: date|null }
+  barangays:   string[]
+  regions:     string[]
+  categories:  string[]
+  brands:      string[]
+  stores:      string[]
