@@ -9,7 +9,8 @@ meta:
   owner      : pulser/edge
   status     : production-deployed
   route      : "/"
-  pages      : [overview, trends, products, consumers, chat]
+  pages      : [overview, trends, products, consumers, chat, yummy, learnbot]
+  agent_integration: yummy + retailbot + learnbot
   deployment:
     url      : "https://scout-mvp.vercel.app"
     platform : vercel
@@ -119,6 +120,42 @@ pages:
     - azure_openai_streaming
     - real_time_data_queries
     - fmcg_dataset_integration
+
+# -----------------------------------------------------------
+#  PAGE: YUMMY (FMCG Intelligence Agent Dashboard)
+# -----------------------------------------------------------
+- id   : yummy
+  label: Yummy Intelligence
+  path : "/yummy"
+  status: production-live
+  components:
+    - yummy_inventory_panel
+    - yummy_promotion_panel
+    - yummy_competitor_panel
+    - yummy_dashboard_overview
+  features:
+    - inventory_monitoring
+    - promotion_analytics
+    - competitor_intelligence
+    - fmcg_category_analysis
+
+# -----------------------------------------------------------
+#  PAGE: LEARNBOT (Interactive Tutorial System)
+# -----------------------------------------------------------
+- id   : learnbot
+  label: LearnBot Demo
+  path : "/learn"
+  icon : 🎓
+  status: production-live
+  components:
+    - learnbot_panel
+    - tutorial_tracker
+    - interactive_walkthrough
+  features:
+    - interactive_tutorial_system
+    - code_walkthrough_mode
+    - voice_command_tutorial
+    - step_by_step_guidance
 
 # =================================================================
 #  COMPONENT DEFINITIONS  – only NEW components are listed below.
@@ -839,12 +876,23 @@ snapshot:
     - "✅ Advanced fallback responses with statistical modeling"
     - "✅ Dual-mode AI interface (Standard vs Enhanced)"
   
+  features_completed_phase3:
+    - "✅ TBWA visual branding implementation (navy #003865/yellow #FFC72C)"
+    - "✅ Icon-based category pills with emojis (🧃🍿🥛🧴🧼🥫🍅)"
+    - "✅ Complete component library with TBWA design tokens"
+    - "✅ Inter font integration with advanced OpenType features"
+    - "✅ Enhanced KpiCard with premium/accent variants"
+    - "✅ ChartCard with featured variants and loading states"
+    - "✅ GlobalFilterBar redesign with TBWA brand highlighting"
+    - "✅ Sidebar navigation with TBWA header and premium indicators"
+    - "✅ Page headers updated with TBWA styling (Overview, Chat)"
+    - "✅ Filter presets (Executive View, Brand Manager) - UI implemented"
+  
   features_remaining:
-    - "🔄 TBWA visual branding implementation (navy/yellow)"
-    - "🔄 Icon-based category pills with emojis"
-    - "🔄 Filter presets (Executive, Brand Manager, Metro Manila)"
+    - "🔄 Persistent RetailBot chat widget on all pages"
     - "⚠️ Sankey chart for substitution patterns (nice-to-have)"
     - "⚠️ Heatmap for shopping time analysis (nice-to-have)"
+    - "⚠️ Advanced filter preset functionality with data binding"
   verification_urls:
     - "https://scout-mvp.vercel.app (main dashboard)"
     - "https://scout-mvp.vercel.app/chat (AI chat interface)"

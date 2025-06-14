@@ -27,6 +27,7 @@ const Sidebar: React.FC = () => {
     { name: 'Consumer Insights', href: '/consumers', icon: Users, description: 'Demographics' },
     { name: 'All Transactions', href: '/transactions', icon: Database, description: 'Complete records (5K)' },
     { name: 'Chat', href: '/chat', icon: MessageCircle, description: 'Scout AI Assistant', isPremium: true },
+    { name: 'Yummy Intelligence', href: '/yummy', icon: Star, description: 'FMCG Intelligence Agent', isPremium: true },
   ];
 
   return (

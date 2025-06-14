@@ -13,6 +13,8 @@ interface Message {
 
 interface EnhancedRetailBotProps {
   className?: string;
+  isEmbedded?: boolean;
+  showHeader?: boolean;
 }
 
 const retailPromptExamples = [
@@ -54,7 +56,11 @@ const retailPromptExamples = [
   }
 ];
 
-export const EnhancedRetailBot: React.FC<EnhancedRetailBotProps> = ({ className = "" }) => {
+export const EnhancedRetailBot: React.FC<EnhancedRetailBotProps> = ({ 
+  className = "", 
+  isEmbedded = false, 
+  showHeader = true 
+}) => {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',

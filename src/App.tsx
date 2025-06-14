@@ -10,7 +10,8 @@ import ProductMix from './pages/ProductMix';
 import ConsumerInsights from './pages/ConsumerInsights';
 import Chat from './pages/Chat';
 import AllTransactions from './pages/AllTransactions';
-import ChatLauncher from './components/chat/ChatLauncher';
+import YummyDashboard from './pages/YummyDashboard';
+import PersistentChatWidget from './components/chat/PersistentChatWidget';
 
 function App() {
   const { initializeFromURL } = useFilterStore();
@@ -44,12 +45,13 @@ function App() {
               <Route path="/consumers" element={<ConsumerInsights />} />
               <Route path="/transactions" element={<AllTransactions />} />
               <Route path="/chat" element={<Chat />} />
+              <Route path="/yummy" element={<YummyDashboard />} />
             </Routes>
           </main>
         </div>
         
-        {/* Global chat widget */}
-        <ChatLauncher />
+        {/* Persistent RetailBot Chat Widget */}
+        <PersistentChatWidget />
       </div>
     </LayoutWrapper>
   );

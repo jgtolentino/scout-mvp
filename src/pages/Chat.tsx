@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { RetailBot } from '../components/RetailBot';
+import { YummyRetailBot } from '../components/YummyRetailBot';
 import { EnhancedRetailBot } from '../components/chat/EnhancedRetailBot';
 import { Bot, Sparkles, TrendingUp, MessageSquare } from 'lucide-react';
 
@@ -27,13 +27,13 @@ const Chat: React.FC = () => {
                 : 'tbwa-btn-secondary hover:shadow-md'
             }`}
           >
-            {useEnhanced ? '🚀 Enhanced AI' : '📊 Standard Mode'}
+            {useEnhanced ? '🏪 Yummy Intelligence' : '📊 Enhanced Scout'}
           </button>
         </div>
         <p className="text-lg text-gray-600 max-w-3xl mx-auto leading-relaxed">
           {useEnhanced 
-            ? 'Advanced AI platform for Philippine FMCG intelligence with predictive analytics, TBWA brand insights, and strategic recommendations powered by real-time data.'
-            : 'Your intelligent companion for Philippine FMCG market analysis. Ask questions about revenue, brands, regions, and get instant insights from our comprehensive dataset.'
+            ? 'Yummy FMCG Intelligence Agent with inventory monitoring, promotion analytics, competitive intelligence, and seamless integration with Scout RetailBot for comprehensive market analysis.'
+            : 'Enhanced Scout AI with advanced analytics, predictive insights, TBWA brand intelligence, and strategic recommendations powered by real-time Philippine FMCG data.'
           }
         </p>
         <div className="mt-4 flex items-center justify-center space-x-6 text-sm text-gray-500">
@@ -97,9 +97,9 @@ const Chat: React.FC = () => {
       {/* Chat Interface */}
       <div className="bg-white rounded-lg shadow-lg">
         {useEnhanced ? (
-          <EnhancedRetailBot className="h-[600px]" />
+          <YummyRetailBot className="h-[600px]" />
         ) : (
-          <RetailBot className="h-[600px]" />
+          <EnhancedRetailBot className="h-[600px]" />
         )}
       </div>
 
