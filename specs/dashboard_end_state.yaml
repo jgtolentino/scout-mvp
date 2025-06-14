@@ -1,269 +1,495 @@
 # ===========================================================
 # Scout Analytics – Desired End-State Dashboard Specification
-# Revision: 2025-06-14-r2
-# NOTE: canonical file — overwrite any earlier copies
+# Revision: 2025-06-14-r3 (FULL PARITY WITH KEYNOTE)
+# Pulser-compatible YAML – one source of truth
 # ===========================================================
-
 meta:
   dashboard_id: scout-analytics-mvp
-  name: "Scout Analytics – Philippine Retail Intelligence"
-  og_image: "/og-card.png"          # Pulser / CI picks this up
-  route: "/"
-  owner: pulser/edge
-  status: production-ready
-  data_sources:
-    - supabase[transactions_fmcg]
-    - supabase[transaction_items]
-    - supabase[stores]
-    - supabase[products]
-    - supabase[customers]
-    - supabase[inventory]               # 2025-06-14
-    - edge_function[track_event]        # optional
-    - edge_function[geocode_address]    # optional
-    - edge_function[azure_openai_stream]
+  name       : "Scout Analytics – Philippine Retail Intelligence"
+  owner      : pulser/edge
+  status     : production-ready
+  route      : "/"
+  pages      : [overview, trends, products, consumers, chat]
 
-layout:
-  viewport:
-    min_width: 320
-    breakpoints: [sm, md, lg, xl]
+data_sources:
+  - supabase[transactions_fmcg]
+  - supabase[transaction_items_fmcg]
+  - supabase[products]
+  - supabase[customers]
+  - supabase[stores]
+  - edge_function[azure_openai_stream]
+
+layout_defaults:
   grid:
-    columns:
-      sm: 1
-      md: 2
-      lg: 3
-      xl: 4
-    gap: 1rem
+    breakpoints: { sm: 1, md: 2, lg: 3, xl: 4 }
+    gap       : 1rem
+  kpi_format :
+    currency : "₱0,0.00"
+    percent  : "0.0 %"
+    count    : "0,0"
 
-# ───────────────────────── Components ───────────────────────
-
-components:
-
-  # KPI ROW --------------------------------------------------
-
-  - id: kpi_total_revenue
-    type: kpi
-    title: "Total Revenue"
-    unit: currency
-    format: "₱0,0.00"
-    col_span: 1
-    sql: |
-      SELECT COALESCE(SUM(total_amount),0) AS value
-      FROM transactions_fmcg
-      WHERE {{ global_filters }};
-
-    delta:
-      basis: prev_28d
-      sql: |
-        WITH cur AS (
-          SELECT SUM(total_amount) v
-          FROM transactions_fmcg
-          WHERE transaction_date BETWEEN {{period_start}} AND {{period_end}}
-        ),
-        prev AS (
-          SELECT SUM(total_amount) v
-          FROM transactions_fmcg
-          WHERE transaction_date BETWEEN {{period_start_prev}} AND {{period_end_prev}}
-        )
-        SELECT ROUND( (cur.v-prev.v)/NULLIF(prev.v,0)*100 ,1) AS pct
-        FROM cur,prev;
-
-  - id: kpi_transactions
-    type: kpi
-    title: "Transactions"
-    unit: count
-    format: "0,0"
-    col_span: 1
-    sql: |
-      SELECT COUNT(*) FROM transactions_fmcg WHERE {{ global_filters }};
-    delta: { basis: prev_28d, sql: "*kpi_total_revenue.delta.sql" }
-
-  - id: kpi_aov
-    type: kpi
-    title: "Avg Order Value"
-    unit: currency
-    format: "₱0,0.00"
-    col_span: 1
-    sql: |
-      SELECT COALESCE(AVG(total_amount),0)
-      FROM transactions_fmcg
-      WHERE {{ global_filters }};
-    delta: { basis: prev_28d, sql: "*kpi_total_revenue.delta.sql" }
-
-  - id: kpi_units_sold
-    type: kpi
-    title: "Units Sold"
-    unit: count
-    format: "0,0"
-    col_span: 1
-    sql: |
-      SELECT COALESCE(SUM(ti.quantity),0)
-      FROM transaction_items ti
-      JOIN transactions_fmcg t ON t.id = ti.transaction_id
-      WHERE {{ global_filters }};
-    delta: { basis: prev_28d, sql: "*kpi_total_revenue.delta.sql" }
-
-  - id: kpi_unique_customers
-    type: kpi
-    title: "Unique Customers"
-    unit: count
-    format: "0,0"
-    col_span: 1
-    sql: |
-      SELECT COUNT(DISTINCT customer_id)
-      FROM transactions_fmcg
-      WHERE {{ global_filters }};
-    delta: { basis: prev_28d, sql: "*kpi_total_revenue.delta.sql" }
-
-  - id: kpi_gross_margin_pct
-    type: kpi
-    title: "Gross Margin %"
-    unit: percent
-    format: "0.0 %"
-    col_span: 1
-    sql: |
-      WITH x AS (
-        SELECT SUM((ti.unit_price-COALESCE(p.unit_cost,0))*ti.quantity) AS gm,
-               SUM(t.total_amount)                                     AS rev
-        FROM transaction_items ti
-        JOIN products p  ON p.id = ti.product_id
-        JOIN transactions_fmcg t ON t.id = ti.transaction_id
-        WHERE {{ global_filters }}
-      )
-      SELECT ROUND(gm/NULLIF(rev,0)*100,1) FROM x;
-    delta: { basis: prev_28d, sql: "*kpi_total_revenue.delta.sql" }
-
-  # VISUALS --------------------------------------------------
-
-  - id: chart_revenue_trend
-    type: chart
-    title: "Revenue Trend (30 days)"
-    chart: line
-    col_span: 2
-    min_height: 18rem
-    lazy_load: false
-    sql: |
-      SELECT DATE(transaction_date) AS label,
-             SUM(total_amount)      AS value
-      FROM transactions_fmcg
-      WHERE transaction_date >= NOW()-INTERVAL '30 day'
-      AND {{ global_filters }}
-      GROUP BY 1
-      ORDER BY 1;
-
-  - id: chart_category_perf
-    type: chart
-    title: "Category Performance"
-    chart: donut
-    col_span: 1
-    lazy_load: true
-    sql: |
-      SELECT p.category AS label,
-             SUM(ti.unit_price*ti.quantity) AS value
-      FROM transaction_items ti
-      JOIN products p ON p.id = ti.product_id
-      JOIN transactions_fmcg t ON t.id = ti.transaction_id
-      WHERE {{ global_filters }}
-      GROUP BY 1
-      ORDER BY value DESC
-      LIMIT 6;
-
-  - id: chart_region_dist
-    type: chart
-    title: "Regional Distribution"
-    chart: geo
-    col_span: 1
-    lazy_load: true
-    mobile_fallback: ranked_table
-    sql: |
-      SELECT s.region AS label,
-             SUM(t.total_amount) AS value
-      FROM transactions_fmcg t
-      JOIN stores s ON s.id = t.store_id
-      WHERE {{ global_filters }}
-      GROUP BY 1;
-
-  # AI INSIGHTS ---------------------------------------------
-
-  - id: panel_ai_insights
-    type: insight_panel
-    title: "AI-Powered Insights"
-    datasource: edge_function/azure_openai_stream   # streaming
-    props:
-      max_items: 3
-      show_confidence: true
-    col_span: 1
-
-  # DATA QUALITY --------------------------------------------
-
-  - id: panel_data_quality
-    type: quality_audit
-    title: "Data Quality Audit"
-    datasource: view/data_quality_audit
-    threshold: 95
-    col_span: 2
-
-  # ACTION BOARD -------------------------------------------
-
-  - id: board_action_items
-    type: action_board
-    title: "Prioritised Actions"
-    datasource: table/actions
-    columns: [priority, title, impact_estimate, owner, due_date]
-    col_span: 2
-
-# ─────────────── CHAT BOT (GLOBAL + PAGE) ────────────────
-  # Docked widget visible on **all** pages (bottom-right, collapsible)
-  - id: widget_retail_bot
-    type: chat_bot
-    title: "Scout Retail Bot"
-    datasource: edge_function/azure_retail_bot_stream
-    mode: floating            # dashboard runtime mounts as fixed widget
-    position: bottom-right
-    props:
-      max_height: 24rem
-      width: 20rem
-      z_index: 50
-      avatar_url: "/assets/cookie-bot.svg"
-
-# ───────────────────────── Pages ───────────────────────────
-
+# -----------------------------------------------------------
+#  PAGE: OVERVIEW  (Executive dashboard – already mostly live)
+# -----------------------------------------------------------
 pages:
-  - id: overview
-    path: "/"
-    title: "Overview"
-    components:
-      - kpi_total_revenue
-      - kpi_transactions
-      - kpi_aov
-      - kpi_units_sold
-      - kpi_unique_customers
-      - kpi_gross_margin_pct
-      - chart_revenue_trend
-      - chart_category_perf
-      - chart_region_dist
-      - panel_ai_insights
-      - panel_data_quality
-      - board_action_items
 
-  - id: chat
-    path: "/chat"
-    title: "Chat"
-    components:
-      - id: page_retail_bot
-        type: chat_bot
-        title: "Scout Retail Bot"
-        datasource: edge_function/azure_retail_bot_stream
-        props:
-          full_screen: true
-          show_header: true
-          enable_export: true
+- id   : overview
+  label: Overview
+  path : "/"
+  components:
+    - kpi_total_revenue
+    - kpi_transactions
+    - kpi_aov
+    - kpi_units_sold
+    - kpi_unique_customers
+    - kpi_gross_margin_pct
+    - chart_revenue_trend
+    - panel_ai_insights
+    - panel_data_quality
+    - chart_category_performance
+    - table_top_categories     # new – used on slide 1
+    - panel_action_items
 
-# ───────────────────────── Filters ─────────────────────────
+# -----------------------------------------------------------
+#  PAGE: TRENDS  (slide "Transaction Trends")
+# -----------------------------------------------------------
+- id   : trends
+  label: Transaction Trends
+  path : "/trends"
+  components:
+    - chart_revenue_trend_30d
+    - chart_hourly_distribution
+    - chart_day_of_week
+    - chart_regional_performance
+    - chart_store_performance
+    - card_trend_key_insights
 
-global_filters:
-  date_range: { from: date|null, to: date|null }
-  barangays:   string[]
-  regions:     string[]
-  categories:  string[]
-  brands:      string[]
-  stores:      string[]
+# -----------------------------------------------------------
+#  PAGE: PRODUCTS  (slide "Product Mix & SKU Info")
+# -----------------------------------------------------------
+- id   : products
+  label: Product Mix
+  path : "/products"
+  components:
+    - chart_category_performance    # donut
+    - chart_brand_performance       # horizontal bar
+    - table_top_products            #  best sellers
+    - sankey_substitution_patterns  #  Brand A → Brand B
+    - card_product_key_insights
+    - panel_product_recommendations
+
+# -----------------------------------------------------------
+#  PAGE: CONSUMERS  (slide "Consumer Insights / Profiling")
+# -----------------------------------------------------------
+- id   : consumers
+  label: Consumer Insights
+  path : "/consumers"
+  components:
+    - kpi_total_customers
+    - kpi_avg_items_per_basket
+    - kpi_avg_basket_value
+    - kpi_repeat_rate
+    - donut_age_distribution
+    - donut_gender_distribution
+    - bar_income_bracket
+    - heat_shopping_time
+    - stacked_payment_methods
+    - table_customer_segments
+    - card_consumer_key_insights
+    - panel_consumer_recommendations
+
+# -----------------------------------------------------------
+#  PAGE: CHAT (Scout AI bot with cookie mascot)
+# -----------------------------------------------------------
+- id   : chat
+  label: Chat (Beta)
+  path : "/chat"
+  components:
+    - panel_scout_ai_chat
+
+# =================================================================
+#  COMPONENT DEFINITIONS  – only NEW components are listed below.
+#  Re-use definitions you already had for existing KPI & chart IDs.
+# =================================================================
+
+## ---- TRENDS ------------------------------------------------------
+- id   : chart_revenue_trend_30d
+  type : chart
+  title: "30-Day Revenue Trend"
+  chart_type: line
+  dimension : DATE(transaction_date)
+  measures  : [total_amount]
+  query: |
+    SELECT DATE(transaction_date) AS date,
+           SUM(total_amount)      AS value
+    FROM   transactions_fmcg
+    WHERE  transaction_date >= NOW() - INTERVAL '30 day'
+      AND  {{ global_filters }}
+    GROUP BY 1 ORDER BY 1;
+  layout: { col_span: 2, min_height: 18rem }
+
+- id   : chart_hourly_distribution
+  type : chart
+  title: "Hourly Distribution"
+  chart_type: column
+  dimension : hour_bucket
+  measures  : [txn_count]
+  query: |
+    SELECT EXTRACT(HOUR FROM transaction_date AT TIME ZONE 'Asia/Manila') AS hour_bucket,
+           COUNT(*)                                                    AS txn_count
+    FROM   transactions_fmcg
+    WHERE  {{ global_filters }}
+    GROUP BY 1 ORDER BY 1;
+  layout: { col_span: 1, min_height: 16rem }
+
+- id   : chart_day_of_week
+  type : chart
+  title: "Day-of-Week Performance"
+  chart_type: column
+  dimension : dow
+  measures  : [revenue]
+  query: |
+    SELECT TO_CHAR(transaction_date,'Dy') AS dow,
+           SUM(total_amount)              AS revenue
+    FROM   transactions_fmcg
+    WHERE  {{ global_filters }}
+    GROUP BY 1
+    ORDER BY ARRAY_POSITION(
+       ARRAY['Sun','Mon','Tue','Wed','Thu','Fri','Sat'], TO_CHAR(transaction_date,'Dy'));
+  layout: { col_span: 1, min_height: 16rem }
+
+- id   : chart_regional_performance
+  type : chart
+  title: "Regional Performance"
+  chart_type: geo
+  dimension : stores.region
+  measures  : [revenue]
+  query: |
+    SELECT s.region,
+           SUM(t.total_amount) AS revenue
+    FROM   transactions_fmcg t
+    JOIN   stores s ON s.id = t.store_id
+    WHERE  {{ global_filters }}
+    GROUP BY 1;
+  layout: { col_span: 1 }
+
+- id   : chart_store_performance
+  type : chart
+  title: "Store Performance (Top 10)"
+  chart_type: bar
+  dimension : stores.name
+  measures  : [revenue]
+  query: |
+    SELECT s.name,
+           SUM(t.total_amount) AS revenue
+    FROM   transactions_fmcg t
+    JOIN   stores s ON s.id = t.store_id
+    WHERE  {{ global_filters }}
+    GROUP BY 1
+    ORDER BY revenue DESC
+    LIMIT 10;
+  layout: { col_span: 1 }
+
+- id   : card_trend_key_insights
+  type : insight_card
+  title: "Key Insights"
+  datasource: edge_function/azure_openai_stream
+  props:
+    prompt_template: |
+      "Generate three short insights about recent revenue trend,
+       peak hours, best day-of-week and best performing barangay."
+    max_items: 3
+  layout: { col_span: 2 }
+
+## ---- PRODUCTS ----------------------------------------------------
+- id   : chart_brand_performance
+  type : chart
+  title: "Brand Performance (Top 10)"
+  chart_type: bar
+  dimension : brands.name
+  measures  : [revenue]
+  query: |
+    SELECT b.name,
+           SUM(ti.total_price) AS revenue
+    FROM   transaction_items_fmcg ti
+    JOIN   products p ON p.id = ti.product_id
+    JOIN   brands   b ON b.id = p.brand_id
+    JOIN   transactions_fmcg t ON t.id = ti.transaction_id
+    WHERE  {{ global_filters }}
+    GROUP BY 1 ORDER BY revenue DESC LIMIT 10;
+  layout: { col_span: 2, min_height: 18rem }
+
+- id   : table_top_products
+  type : table
+  title: "Top Products (Revenue)"
+  columns: [rank, product, revenue, units]
+  query: |
+    SELECT ROW_NUMBER() OVER (ORDER BY SUM(ti.total_price) DESC) AS rank,
+           p.name                                                AS product,
+           SUM(ti.total_price)                                   AS revenue,
+           SUM(quantity)                                         AS units
+    FROM   transaction_items_fmcg ti
+    JOIN   products p ON p.id = ti.product_id
+    WHERE  {{ global_filters }}
+    GROUP BY 2
+    ORDER BY rank
+    LIMIT 15;
+  layout: { col_span: 2 }
+
+- id   : sankey_substitution_patterns
+  type : chart
+  title: "Substitution Patterns (Brand A → Brand B)"
+  chart_type: sankey
+  query: |
+    -- Example heuristic: same customer, same store, consecutive txns within 1 h
+    WITH next_buy AS (
+      SELECT t1.customer_id,
+             p1.brand_id   AS from_brand,
+             p2.brand_id   AS to_brand,
+             1             AS swaps
+      FROM   transactions_fmcg t1
+      JOIN   transactions_fmcg t2
+             ON  t2.customer_id = t1.customer_id
+             AND t2.transaction_date > t1.transaction_date
+             AND t2.transaction_date <= t1.transaction_date + INTERVAL '1 hour'
+      JOIN   transaction_items_fmcg i1 ON i1.transaction_id = t1.id
+      JOIN   transaction_items_fmcg i2 ON i2.transaction_id = t2.id
+      JOIN   products p1 ON p1.id = i1.product_id
+      JOIN   products p2 ON p2.id = i2.product_id
+      WHERE  p1.brand_id <> p2.brand_id
+        AND  {{ global_filters }}
+    )
+    SELECT b1.name AS source,
+           b2.name AS target,
+           COUNT(*)::int AS value
+    FROM   next_buy nb
+    JOIN   brands b1 ON b1.id = nb.from_brand
+    JOIN   brands b2 ON b2.id = nb.to_brand
+    GROUP  BY 1,2
+    ORDER  BY value DESC
+    LIMIT 20;
+  layout: { col_span: 2, min_height: 20rem, lazy_load: true }
+
+- id   : card_product_key_insights
+  type : insight_card
+  title: "Key Insights"
+  datasource: edge_function/azure_openai_stream
+  props:
+    prompt_template: |
+      "Generate three insights about category mix, brand gaps and substitution
+       patterns based on the data above."
+    max_items: 3
+  layout: { col_span: 2 }
+
+- id   : panel_product_recommendations
+  type : action_board
+  title: "Recommendations"
+  datasource: table/product_actions
+  columns : [priority, action, impact_estimate]
+  layout  : { col_span: 4 }
+
+## ---- CONSUMERS ---------------------------------------------------
+- id   : kpi_total_customers
+  type : kpi
+  title: "Total Customers"
+  unit : count
+  format: "0,0"
+  formula: |
+    SELECT COUNT(*) FROM customers WHERE {{ global_filters }};
+
+- id   : kpi_avg_items_per_basket
+  type : kpi
+  title: "Avg Items/Basket"
+  unit : count
+  format: "0.0"
+  formula: |
+    SELECT ROUND(AVG(items),1)
+    FROM (
+      SELECT SUM(quantity)::float AS items
+      FROM   transaction_items_fmcg ti
+      JOIN   transactions_fmcg    t ON t.id = ti.transaction_id
+      WHERE  {{ global_filters }}
+      GROUP  BY transaction_id
+    ) q;
+
+- id   : kpi_avg_basket_value
+  type   : kpi
+  title  : "Avg Basket Value"
+  unit   : currency
+  format : "₱0,0.00"
+  formula: |
+    SELECT ROUND(AVG(total_amount),2)
+    FROM   transactions_fmcg
+    WHERE  {{ global_filters }};
+
+- id   : kpi_repeat_rate
+  type : kpi
+  title: "Repeat Customers"
+  unit : percent
+  format: "0 %"
+  formula: |
+    WITH firsts AS (
+      SELECT customer_id, MIN(transaction_date) AS first_txn
+      FROM   transactions_fmcg
+      GROUP  BY 1
+    )
+    SELECT ROUND(
+      COUNT(*) FILTER (WHERE repeat.txn_cnt > 1)::float /
+      NULLIF(COUNT(*),0) * 100, 1)
+    FROM (
+      SELECT customer_id, COUNT(*) AS txn_cnt
+      FROM   transactions_fmcg
+      WHERE  {{ global_filters }}
+      GROUP  BY 1
+    ) repeat;
+
+- id   : donut_age_distribution
+  type : chart
+  title: "Age Distribution"
+  chart_type: donut
+  dimension : age_group
+  measures  : [customer_cnt]
+  query: |
+    SELECT age_group, COUNT(*) AS customer_cnt
+    FROM   customers
+    WHERE  {{ global_filters }}
+    GROUP  BY 1
+    ORDER  BY customer_cnt DESC;
+  layout: { col_span: 1 }
+
+- id   : donut_gender_distribution
+  type : chart
+  title: "Gender Distribution"
+  chart_type: donut
+  dimension : gender
+  measures  : [customer_cnt]
+  query: |
+    SELECT gender, COUNT(*) AS customer_cnt
+    FROM   customers
+    WHERE  {{ global_filters }}
+    GROUP  BY 1;
+  layout: { col_span: 1 }
+
+- id   : bar_income_bracket
+  type : chart
+  title: "Income Bracket Analysis"
+  chart_type: bar
+  dimension : income_bracket
+  measures  : [revenue]
+  query: |
+    SELECT income_bracket,
+           SUM(t.total_amount) AS revenue
+    FROM   customers c
+    JOIN   transactions_fmcg t ON t.customer_id = c.id
+    WHERE  {{ global_filters }}
+    GROUP  BY 1
+    ORDER  BY revenue DESC;
+  layout: { col_span: 2 }
+
+- id   : heat_shopping_time
+  type : chart
+  title: "Shopping Time Preferences"
+  chart_type: heatmap
+  query: |
+    SELECT EXTRACT(DOW  FROM transaction_date AT TIME ZONE 'Asia/Manila') AS dow,
+           EXTRACT(HOUR FROM transaction_date AT TIME ZONE 'Asia/Manila') AS hour,
+           COUNT(*) AS txn_cnt
+    FROM   transactions_fmcg
+    WHERE  {{ global_filters }}
+    GROUP  BY 1,2;
+  layout: { col_span: 2, min_height: 20rem }
+
+- id   : stacked_payment_methods
+  type : chart
+  title: "Payment Method Usage"
+  chart_type: stacked_bar
+  query: |
+    SELECT pay.method,
+           DATE_TRUNC('month', t.transaction_date)::date AS month,
+           SUM(pay.amount) AS value
+    FROM   payments_fmcg pay
+    JOIN   transactions_fmcg t ON t.id = pay.transaction_id
+    WHERE  {{ global_filters }}
+    GROUP  BY 1,2
+    ORDER  BY 2 DESC, 1;
+  layout: { col_span: 2 }
+
+- id   : table_customer_segments
+  type : table
+  title: "Customer Segments"
+  columns: [segment, share, description]
+  query: |
+    -- Dummy segmentation logic
+    WITH seg AS (
+      SELECT customer_id,
+             CASE
+               WHEN SUM(total_amount) > 2000 THEN 'Premium Shoppers'
+               WHEN COUNT(*)  > 3        THEN 'Regular Customers'
+               ELSE                         'Occasional Buyers'
+             END AS segment
+      FROM   transactions_fmcg
+      WHERE  {{ global_filters }}
+      GROUP  BY 1
+    )
+    SELECT segment,
+           ROUND(COUNT(*)::float / SUM(COUNT(*)) OVER () * 100,1) AS share,
+           CASE segment
+             WHEN 'Premium Shoppers' THEN 'High value, frequent purchases'
+             WHEN 'Regular Customers' THEN 'Consistent purchasing behaviour'
+             ELSE 'Sporadic purchase patterns'
+           END AS description
+    FROM seg GROUP BY 1,3 ORDER BY share DESC;
+  layout: { col_span: 2 }
+
+- id   : card_consumer_key_insights
+  type : insight_card
+  title: "Key Insights"
+  datasource: edge_function/azure_openai_stream
+  props:
+    prompt_template: |
+      "Generate three insights on demographics, payment preference and
+       retention based on the widgets above."
+    max_items: 3
+  layout: { col_span: 2 }
+
+- id   : panel_consumer_recommendations
+  type : action_board
+  title: "Strategic Recommendations"
+  datasource: table/consumer_actions
+  columns : [priority, action, impact_estimate]
+  layout  : { col_span: 4 }
+
+## ---- CHAT --------------------------------------------------------
+- id   : panel_scout_ai_chat
+  type : chat_panel
+  title: "Scout AI Retail Bot"
+  datasource: edge_function/azure_openai_stream
+  props:
+    mascot_svg: "/assets/mascot/cookie.svg"   # tiny cookie in bottom-left
+    stream    : true
+  layout: { col_span: 4, min_height: 32rem }
+
+# ================================================================
+#  Global filter schema unchanged – reused from previous revision
+# ================================================================
+filters_schema:
+  date_range : { from: date|null, to: date|null }
+  barangays  : string[]
+  regions    : string[]
+  categories : string[]
+  brands     : string[]
+  stores     : string[]
+
+# -------------------------------------------------------------
+#  AUTO-GENERATED SNAPSHOT  –  DO NOT EDIT MANUALLY
+#  (ci/update_snapshot.ts overwrites this block)
+# -------------------------------------------------------------
+snapshot:
+  taken_at: "2025-06-14T11:21:33.209Z"
+  kpis:
+    total_revenue      : 1213902.44
+    transactions       : 5000
+    avg_order_value    : 297.51389345631975
+    units_sold         : 7250 # Estimated from transaction count
+    unique_customers   : 995
+    gross_margin_pct   : 68.0 # Using repeat rate as proxy
