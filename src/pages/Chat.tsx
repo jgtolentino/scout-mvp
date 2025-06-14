@@ -54,39 +54,42 @@ const Chat: React.FC = () => {
 
       {/* Feature Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
-          <div className="flex items-center space-x-3 mb-3">
-            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-              <TrendingUp className="w-5 h-5 text-blue-600" />
+        <div className="tbwa-card p-6 hover:border-tbwa-navy-300">
+          <div className="flex items-center space-x-3 mb-4">
+            <div className="w-12 h-12 bg-tbwa-navy rounded-xl flex items-center justify-center">
+              <TrendingUp className="w-6 h-6 text-white" />
             </div>
-            <h3 className="font-semibold text-gray-900">Revenue Analysis</h3>
+            <h3 className="font-semibold text-tbwa-navy">Revenue Analysis</h3>
           </div>
-          <p className="text-sm text-gray-600">
-            Deep insights into sales performance, trends, and growth opportunities across 17 Philippine regions.
+          <p className="text-sm text-gray-600 leading-relaxed">
+            Deep insights into sales performance, trends, and growth opportunities across 17 Philippine regions with real-time data integration.
           </p>
         </div>
 
-        <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
-          <div className="flex items-center space-x-3 mb-3">
-            <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-              <Sparkles className="w-5 h-5 text-purple-600" />
-            </div>
-            <h3 className="font-semibold text-gray-900">Brand Intelligence</h3>
+        <div className="tbwa-card p-6 hover:border-tbwa-yellow-300 relative">
+          <div className="absolute top-4 right-4">
+            <span className="tbwa-badge">⭐ Premium</span>
           </div>
-          <p className="text-sm text-gray-600">
-            TBWA portfolio analysis (Oishi, Del Monte, Champion) with competitive positioning insights.
+          <div className="flex items-center space-x-3 mb-4">
+            <div className="w-12 h-12 bg-tbwa-yellow rounded-xl flex items-center justify-center">
+              <Sparkles className="w-6 h-6 text-tbwa-navy" />
+            </div>
+            <h3 className="font-semibold text-tbwa-navy">Brand Intelligence</h3>
+          </div>
+          <p className="text-sm text-gray-600 leading-relaxed">
+            Advanced TBWA portfolio analysis (Oishi, Del Monte, Champion) with competitive positioning, market share evolution, and strategic insights.
           </p>
         </div>
 
-        <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
-          <div className="flex items-center space-x-3 mb-3">
-            <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-              <MessageSquare className="w-5 h-5 text-green-600" />
+        <div className="tbwa-card p-6 hover:border-green-300">
+          <div className="flex items-center space-x-3 mb-4">
+            <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+              <MessageSquare className="w-6 h-6 text-green-600" />
             </div>
-            <h3 className="font-semibold text-gray-900">Context Aware</h3>
+            <h3 className="font-semibold text-tbwa-navy">Context Aware</h3>
           </div>
-          <p className="text-sm text-gray-600">
-            Understands your applied filters and provides insights based on your current dashboard view.
+          <p className="text-sm text-gray-600 leading-relaxed">
+            Understands your applied filters and provides insights based on your current dashboard view with intelligent context switching.
           </p>
         </div>
       </div>
