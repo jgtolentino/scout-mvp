@@ -13,6 +13,13 @@ import ChatLauncher from './components/chat/ChatLauncher';
 function App() {
   const { initializeFromURL } = useFilterStore();
 
+  // Demo: Deliberate console error for testing auto-issue workflow
+  useEffect(() => {
+    if (import.meta.env.VITE_SCOUT_DEMO === 'test-error') {
+      console.error('demo-fail: Testing auto-issue creation workflow');
+    }
+  }, []);
+
   useEffect(() => {
     initializeFromURL();
   }, [initializeFromURL]);
