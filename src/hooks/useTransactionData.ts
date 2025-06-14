@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useFilterStore } from '../store/useFilterStore';
 import { KPIData, ChartData, TimeSeriesData } from '../types';
 import { format } from 'date-fns';
-import { supabase } from '../lib/supabase';
+import { getDataProvider } from '../lib/dataProvider';
 
 interface Transaction {
   id: string;
@@ -43,11 +43,16 @@ export const useTransactionData = () => {
          */
 
         // Fetch transactions in smaller batches to prevent payload issues
-        const batchSize = 250;
+        const BATCH_SIZE = 1000; // Increased batch size for better performance
         const allTransactions: Transaction[] = [];
+        const db = getDataProvider();
         
-        let query = supabase
-          .from('transactions_fmcg')
+        let offset = 0;
+        let hasMore = true;
+        
+        while (hasMore) {
+          let query = db
+            .from('transactions_fmcg')
           .select(`
             id,
             transaction_date,
