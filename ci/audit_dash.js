@@ -10,7 +10,8 @@ if (process.argv.length < 3) {
   process.exit(1);
 }
 
-const url = process.argv[2];
+// Default to localhost:3000 if no URL provided
+const url = process.argv[2] || 'http://localhost:3000';
 console.log(`🔍  Scout Analytics AI Agent starting audit of ${url}...`);
 
 const browser = await chromium.launch({

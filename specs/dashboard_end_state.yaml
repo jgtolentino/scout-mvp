@@ -524,3 +524,407 @@ snapshot:
     - "Show me repeat-customer rate and how to improve it"
     - "Which region grew fastest MoM?"
     - "Explain what the 5,000-row dataset actually contains"
+
+# Project Scout Database Specification
+# This file defines the canonical state of our Supabase database
+
+roles:
+  - name: admin
+    inherit: false
+  - name: analyst
+    inherit: false
+
+tables:
+  brands:
+    columns:
+      - name: id
+        type: integer
+        primary_key: true
+      - name: name
+        type: varchar
+        not_null: true
+      - name: company
+        type: text
+        not_null: true
+      - name: category
+        type: varchar
+      - name: is_tbwa
+        type: boolean
+        default: false
+      - name: market_share
+        type: decimal(5,2)
+      - name: created_at
+        type: timestamptz
+        default: now()
+    rls:
+      enabled: true
+      policies:
+        - name: Allow public read access to brands
+          operation: select
+          using: true
+        - name: Allow admin and service_role full access on brands
+          operation: all
+          using: auth.role() in ('admin', 'service_role')
+          with_check: auth.role() in ('admin', 'service_role')
+
+  products:
+    columns:
+      - name: id
+        type: integer
+        primary_key: true
+      - name: name
+        type: varchar
+        not_null: true
+      - name: brand_id
+        type: integer
+        references: brands(id)
+      - name: created_at
+        type: timestamptz
+        default: now()
+      - name: category
+        type: varchar
+      - name: subcategory
+        type: text
+      - name: unit_cost
+        type: decimal(10,2)
+      - name: retail_price
+        type: decimal(10,2)
+      - name: size
+        type: text
+      - name: unit
+        type: text
+    rls:
+      enabled: true
+      policies:
+        - name: Allow analyst, admin, service_role read access on products
+          operation: select
+          using: auth.role() in ('analyst', 'admin', 'service_role')
+        - name: Allow admin and service_role write access on products
+          operation: all
+          using: auth.role() in ('admin', 'service_role')
+          with_check: auth.role() in ('admin', 'service_role')
+
+  stores:
+    columns:
+      - name: id
+        type: integer
+        primary_key: true
+      - name: name
+        type: text
+        not_null: true
+        unique: true
+      - name: location
+        type: text
+      - name: barangay
+        type: text
+      - name: city
+        type: text
+      - name: region
+        type: text
+      - name: latitude
+        type: numeric
+      - name: longitude
+        type: numeric
+      - name: store_type
+        type: text
+      - name: size_category
+        type: text
+      - name: created_at
+        type: timestamptz
+        default: now()
+      - name: updated_at
+        type: timestamptz
+        default: now()
+    rls:
+      enabled: true
+      policies:
+        - name: Allow analyst, admin, service_role read access on stores
+          operation: select
+          using: auth.role() in ('analyst', 'admin', 'service_role')
+        - name: Allow admin and service_role write access on stores
+          operation: all
+          using: auth.role() in ('admin', 'service_role')
+          with_check: auth.role() in ('admin', 'service_role')
+
+  customers:
+    columns:
+      - name: id
+        type: integer
+        primary_key: true
+      - name: customer_id
+        type: text
+        not_null: true
+        unique: true
+      - name: name
+        type: text
+        not_null: true
+      - name: age
+        type: integer
+      - name: gender
+        type: text
+        check: gender in ('Male', 'Female', 'Other')
+      - name: region
+        type: text
+        not_null: true
+      - name: city
+        type: text
+      - name: barangay
+        type: text
+      - name: loyalty_tier
+        type: text
+        default: 'regular'
+      - name: total_spent
+        type: numeric
+        default: 0
+      - name: visit_count
+        type: integer
+        default: 1
+      - name: created_at
+        type: timestamptz
+        default: now()
+    rls:
+      enabled: true
+      policies:
+        - name: Allow analyst, admin, service_role read access on customers
+          operation: select
+          using: auth.role() in ('analyst', 'admin', 'service_role')
+
+  devices:
+    columns:
+      - name: id
+        type: uuid
+        primary_key: true
+        default: gen_random_uuid()
+      - name: device_id
+        type: text
+        not_null: true
+        unique: true
+      - name: device_type
+        type: text
+        not_null: true
+        default: 'RaspberryPi5'
+      - name: firmware_version
+        type: text
+        not_null: true
+        default: '1.0.0'
+      - name: store_id
+        type: integer
+        references: stores(id)
+      - name: status
+        type: text
+        not_null: true
+        default: 'active'
+        check: status in ('active', 'inactive', 'maintenance')
+      - name: registration_time
+        type: timestamptz
+        default: now()
+      - name: last_seen
+        type: timestamptz
+        default: now()
+      - name: metadata
+        type: jsonb
+        default: '{}'
+      - name: location
+        type: text
+      - name: network_info
+        type: jsonb
+        default: '{}'
+      - name: created_at
+        type: timestamptz
+        default: now()
+      - name: updated_at
+        type: timestamptz
+        default: now()
+    rls:
+      enabled: true
+      policies:
+        - name: Allow analyst, admin, service_role read access on devices
+          operation: select
+          using: auth.role() in ('analyst', 'admin', 'service_role')
+        - name: Allow admin and service_role write access on devices
+          operation: all
+          using: auth.role() in ('admin', 'service_role')
+          with_check: auth.role() in ('admin', 'service_role')
+
+  transactions:
+    columns:
+      - name: id
+        type: integer
+        primary_key: true
+      - name: created_at
+        type: timestamptz
+        default: now()
+      - name: transaction_date
+        type: timestamptz
+        not_null: true
+      - name: total_amount
+        type: numeric
+        default: 0
+      - name: customer_age
+        type: integer
+      - name: customer_gender
+        type: varchar
+      - name: customer_id
+        type: text
+        references: customers(customer_id)
+      - name: store_id
+        type: integer
+        references: stores(id)
+      - name: checkout_seconds
+        type: integer
+      - name: is_weekend
+        type: boolean
+      - name: nlp_processed
+        type: boolean
+        default: false
+      - name: nlp_processed_at
+        type: timestamptz
+      - name: nlp_confidence_score
+        type: numeric
+      - name: device_id
+        type: text
+        references: devices(device_id)
+      - name: payment_method
+        type: varchar
+        default: 'cash'
+      - name: checkout_time
+        type: timestamptz
+        default: now()
+      - name: request_type
+        type: varchar
+        default: 'branded'
+      - name: transcription_text
+        type: text
+      - name: suggestion_accepted
+        type: boolean
+        default: false
+    rls:
+      enabled: true
+      policies:
+        - name: Allow analyst, admin, service_role read access on transactions
+          operation: select
+          using: auth.role() in ('analyst', 'admin', 'service_role')
+        - name: Allow admin and service_role write access on transactions
+          operation: all
+          using: auth.role() in ('admin', 'service_role')
+          with_check: auth.role() in ('admin', 'service_role')
+
+  transaction_items:
+    columns:
+      - name: id
+        type: integer
+        primary_key: true
+      - name: transaction_id
+        type: integer
+        references: transactions(id)
+      - name: product_id
+        type: integer
+        references: products(id)
+      - name: quantity
+        type: integer
+        not_null: true
+      - name: unit_price
+        type: numeric
+        not_null: true
+      - name: total_price
+        type: numeric
+        not_null: true
+      - name: created_at
+        type: timestamptz
+        default: now()
+    rls:
+      enabled: true
+      policies:
+        - name: Allow analyst, admin, service_role read access on transaction_items
+          operation: select
+          using: auth.role() in ('analyst', 'admin', 'service_role')
+        - name: Allow admin and service_role write access on transaction_items
+          operation: all
+          using: auth.role() in ('admin', 'service_role')
+          with_check: auth.role() in ('admin', 'service_role')
+
+views:
+  daily_sales:
+    definition: |
+      SELECT
+        DATE(t.transaction_date) as date,
+        COUNT(DISTINCT t.id) as transaction_count,
+        SUM(ti.total_price) as total_revenue,
+        AVG(ti.total_price) as avg_transaction_value
+      FROM transactions t
+      JOIN transaction_items ti ON t.id = ti.transaction_id
+      GROUP BY DATE(t.transaction_date)
+      ORDER BY date
+    rls:
+      enabled: true
+      policies:
+        - name: Allow analytics roles read on daily_sales
+          operation: select
+          using: auth.role() in ('analyst', 'admin', 'service_role')
+
+  product_performance:
+    definition: |
+      SELECT
+        p.name as product_name,
+        b.name as brand_name,
+        p.category,
+        SUM(ti.quantity) as units_sold,
+        SUM(ti.total_price) as total_revenue,
+        AVG(ti.unit_price) as avg_price
+      FROM products p
+      JOIN brands b ON p.brand_id = b.id
+      JOIN transaction_items ti ON p.id = ti.product_id
+      JOIN transactions t ON ti.transaction_id = t.id
+      GROUP BY p.name, b.name, p.category
+      ORDER BY total_revenue DESC
+    rls:
+      enabled: true
+      policies:
+        - name: Allow analytics roles read on product_performance
+          operation: select
+          using: auth.role() in ('analyst', 'admin', 'service_role')
+
+functions:
+  get_age_distribution_simple:
+    parameters:
+      - name: filters
+        type: jsonb
+        default: '{}'
+    returns: table
+    language: plpgsql
+    security: definer
+    definition: |
+      -- Function definition here (omitted for brevity)
+
+  get_gender_distribution_simple:
+    parameters:
+      - name: filters
+        type: jsonb
+        default: '{}'
+    returns: table
+    language: plpgsql
+    security: definer
+    definition: |
+      -- Function definition here (omitted for brevity)
+
+  get_top_products:
+    parameters:
+      - name: filters
+        type: jsonb
+        default: '{}'
+    returns: table
+    language: plpgsql
+    security: definer
+    definition: |
+      -- Function definition here (omitted for brevity)
+
+  get_income_distribution:
+    parameters:
+      - name: filters
+        type: jsonb
+        default: '{}'
+    returns: table
+    language: plpgsql
+    security: definer
+    definition: |
+      -- Function definition here (omitted for brevity)

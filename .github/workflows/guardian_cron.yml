@@ -1,0 +1,35 @@
+name: Schema Drift Detection
+
+on:
+  schedule:
+    - cron: '0 2 * * *'  # Run at 02:00 GMT+8 daily
+  workflow_dispatch:  # Allow manual triggering
+
+jobs:
+  check-drift:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call Guardian Edge Function
+        run: |
+          curl -X POST \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
+            -H "Content-Type: application/json" \
+            "${{ secrets.SUPABASE_URL }}/functions/v1/guardian_drift"
+        
+      - name: Check for Drift
+        if: failure()
+        run: |
+          echo "Schema drift detected! Check GitHub issues for details."
+          exit 1
+
+      - name: Slack –  notify on failure
+        if: ${{ failure() }}
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          author_name: Supabase Guardian
+          fields: repo,commit,job
+          username: CI Notifier
+          channel: '#your-ci-alerts' # optional – defaults to webhook's channel
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }} 
