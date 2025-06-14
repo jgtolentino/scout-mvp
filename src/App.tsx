@@ -1,21 +1,25 @@
-import React, { useEffect } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import { useFilterStore } from './store/useFilterStore';
 import { LayoutWrapper } from './components/LayoutWrapper';
 import Sidebar from './components/layout/Sidebar';
 import GlobalFilterBar from './components/filters/GlobalFilterBar';
 import Overview from './pages/Overview';
-import TransactionTrends from './pages/TransactionTrends';
-import ProductMix from './pages/ProductMix';
-import ConsumerInsights from './pages/ConsumerInsights';
-import Chat from './pages/Chat';
-import AllTransactions from './pages/AllTransactions';
-import YummyDashboard from './pages/YummyDashboard';
-import LearnBot from './pages/LearnBot';
+import Performance from './pages/Performance';
+import PromoCompetition from './pages/PromoCompetition';
+import ScoutAI from './pages/Chat';
 import PersistentChatWidget from './components/chat/PersistentChatWidget';
+import LearnBotModal from './components/LearnBotModal';
+
+function shouldShowLearnBot() {
+  return localStorage.getItem('learnbot_seen') !== 'true';
+}
 
 function App() {
   const { initializeFromURL } = useFilterStore();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [learnBotOpen, setLearnBotOpen] = useState(false);
 
   // Demo: Deliberate console error for testing auto-issue workflow
   useEffect(() => {
@@ -27,6 +31,17 @@ function App() {
   useEffect(() => {
     initializeFromURL();
   }, [initializeFromURL]);
+
+  // Open LearnBot if ?learn=1 or on first visit
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get('learn') === '1') {
+      setLearnBotOpen(true);
+    } else if (shouldShowLearnBot()) {
+      setLearnBotOpen(true);
+      localStorage.setItem('learnbot_seen', 'true');
+    }
+  }, [location.search]);
 
   return (
     <LayoutWrapper>
@@ -41,19 +56,26 @@ function App() {
           <main className="flex-1 lg:ml-64 p-6">
             <Routes>
               <Route path="/" element={<Overview />} />
-              <Route path="/trends" element={<TransactionTrends />} />
-              <Route path="/products" element={<ProductMix />} />
-              <Route path="/consumers" element={<ConsumerInsights />} />
-              <Route path="/transactions" element={<AllTransactions />} />
-              <Route path="/chat" element={<Chat />} />
-              <Route path="/yummy" element={<YummyDashboard />} />
-              <Route path="/learn" element={<LearnBot />} />
+              <Route path="/performance" element={<Performance />} />
+              <Route path="/promo" element={<PromoCompetition />} />
+              <Route path="/ai" element={<ScoutAI />} />
             </Routes>
           </main>
         </div>
         
         {/* Persistent RetailBot Chat Widget */}
         <PersistentChatWidget />
+
+        {/* LearnBot Modal */}
+        <LearnBotModal isOpen={learnBotOpen} onClose={() => {
+          setLearnBotOpen(false);
+          // Remove ?learn=1 from URL if present
+          const params = new URLSearchParams(location.search);
+          if (params.get('learn') === '1') {
+            params.delete('learn');
+            navigate({ search: params.toString() }, { replace: true });
+          }
+        }} />
       </div>
     </LayoutWrapper>
   );

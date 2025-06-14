@@ -3,7 +3,7 @@ import { YummyRetailBot } from '../components/YummyRetailBot';
 import { EnhancedRetailBot } from '../components/chat/EnhancedRetailBot';
 import { Bot, Sparkles, TrendingUp, MessageSquare } from 'lucide-react';
 
-const Chat: React.FC = () => {
+const ScoutAI: React.FC = () => {
   const [useEnhanced, setUseEnhanced] = useState(true);
 
   return (
@@ -147,4 +147,4 @@ const Chat: React.FC = () => {
   );
 };
 
-export default Chat;
+export default ScoutAI;

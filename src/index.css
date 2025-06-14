@@ -4,118 +4,25 @@
 @tailwind components;
 @tailwind utilities;
 
-/* TBWA Brand Variables */
-:root {
-  --tbwa-navy: #003865;
-  --tbwa-yellow: #FFC72C;
-  --tbwa-navy-50: #f0f7ff;
-  --tbwa-navy-100: #e0efff;
-  --tbwa-navy-900: #003865;
-  --tbwa-yellow-50: #fffdf0;
-  --tbwa-yellow-500: #FFC72C;
-}
+/* Remove TBWA Brand Variables and classes */
 
-/* Base TBWA Typography */
 @layer base {
   html {
     font-family: 'Inter', system-ui, sans-serif;
     font-feature-settings: 'cv11', 'ss01';
     font-variation-settings: 'opsz' 32;
   }
-  
   body {
     @apply bg-neutral text-brandText font-sans antialiased;
   }
-  
   h1, h2, h3, h4, h5, h6 {
-    @apply font-semibold text-tbwa-navy;
-  }
-  
-  .tbwa-gradient {
-    background: linear-gradient(135deg, var(--tbwa-navy) 0%, var(--tbwa-yellow) 100%);
-  }
-  
-  .tbwa-text-gradient {
-    background: linear-gradient(135deg, var(--tbwa-navy) 0%, var(--tbwa-yellow) 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    @apply font-semibold;
   }
 }
 
-/* TBWA Component Styles */
-@layer components {
-  .tbwa-card {
-    @apply bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200;
-  }
-  
-  .tbwa-btn-primary {
-    @apply bg-tbwa-navy hover:bg-tbwa-navy-800 text-white font-medium px-4 py-2 rounded-lg transition-colors duration-200;
-  }
-  
-  .tbwa-btn-secondary {
-    @apply bg-tbwa-yellow hover:bg-tbwa-yellow-600 text-tbwa-navy font-medium px-4 py-2 rounded-lg transition-colors duration-200;
-  }
-  
-  .tbwa-badge {
-    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-tbwa-navy-50 text-tbwa-navy;
-  }
-  
-  .tbwa-badge-yellow {
-    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-tbwa-yellow-50 text-tbwa-navy;
-  }
-  
-  .tbwa-filter-chip {
-    @apply inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-white border border-gray-300 hover:border-tbwa-navy-300 hover:bg-tbwa-navy-50 transition-colors duration-200 cursor-pointer;
-  }
-  
-  .tbwa-filter-chip-active {
-    @apply bg-tbwa-navy text-white border-tbwa-navy;
-  }
-  
-  .tbwa-kpi-card {
-    @apply bg-white rounded-xl border border-gray-200 p-6 shadow-sm hover:shadow-md transition-all duration-200;
-  }
-  
-  .tbwa-metric-value {
-    @apply text-2xl font-bold text-tbwa-navy;
-  }
-  
-  .tbwa-metric-label {
-    @apply text-sm font-medium text-gray-600 uppercase tracking-wide;
-  }
-  
-  .tbwa-chart-card {
-    @apply bg-white rounded-xl border border-gray-200 p-6 shadow-sm;
-  }
-  
-  .tbwa-sidebar {
-    @apply bg-white border-r border-gray-200 shadow-sm;
-  }
-  
-  .tbwa-nav-item {
-    @apply flex items-center px-4 py-3 text-gray-700 hover:bg-tbwa-navy-50 hover:text-tbwa-navy rounded-lg transition-colors duration-200;
-  }
-  
-  .tbwa-nav-item-active {
-    @apply bg-tbwa-navy text-white;
-  }
-  
-  .tbwa-header {
-    @apply bg-white border-b border-gray-200 shadow-sm;
-  }
-  
-  .tbwa-brand-highlight {
-    @apply relative;
-  }
-  
-  .tbwa-brand-highlight::before {
-    content: '';
-    @apply absolute -left-2 top-0 bottom-0 w-1 bg-tbwa-yellow rounded-full;
-  }
-}
+/* Remove all .tbwa-* component and utility classes */
 
-/* TBWA Category Icons */
+/* Category Icons (keep for utility, not branding) */
 @layer utilities {
   .category-beverages::before { content: '🧃'; }
   .category-snacks::before { content: '🍿'; }
@@ -127,20 +34,14 @@
   .category-default::before { content: '📦'; }
 }
 
-/* Responsive scaling and zoom support */
 :root {
-  /* Ensure consistent scaling across zoom levels */
   font-size: clamp(14px, 1vw, 18px);
-  
-  /* CSS variables for responsive scaling */
   --scale-factor: clamp(0.8, 1vw, 1.2);
   --spacing-unit: clamp(0.25rem, 0.5vw, 1rem);
   --text-scale: clamp(0.875rem, 2vw, 1.125rem);
 }
 
-/* Base scaling for the entire application */
 html {
-  /* Improved zoom behavior */
   zoom: 1;
   -webkit-text-size-adjust: 100%;
   -ms-text-size-adjust: 100%;
@@ -148,33 +49,25 @@ html {
 }
 
 body {
-  /* Ensure body scales properly */
   min-width: 320px;
   overflow-x: auto;
   font-size: var(--text-scale);
 }
 
-/* Container scaling */
 .dashboard-container {
-  /* Scale the entire dashboard proportionally */
   transform-origin: top left;
   width: 100%;
   min-height: 100vh;
-  
-  /* Responsive scaling based on viewport */
   @media (max-width: 768px) {
     transform: scale(var(--scale-factor));
   }
-  
   @media (min-width: 1920px) {
     max-width: 1920px;
     margin: 0 auto;
   }
 }
 
-/* Chart and card responsive scaling */
 .chart-container {
-  /* Ensure charts scale proportionally */
   aspect-ratio: 16/9;
   width: 100%;
   height: auto;
@@ -183,12 +76,10 @@ body {
 }
 
 .kpi-card {
-  /* Proportional scaling for KPI cards */
   min-width: clamp(200px, 25vw, 300px);
   padding: var(--spacing-unit);
 }
 
-/* Text scaling */
 .dashboard-title {
   font-size: clamp(1.5rem, 4vw, 3rem);
   line-height: 1.2;
@@ -208,31 +99,25 @@ body {
   font-size: clamp(0.75rem, 1.5vw, 1rem);
 }
 
-/* Responsive grid scaling - removed problematic dashboard-grid */
-
 .kpi-grid {
   display: grid;
   gap: var(--spacing-unit);
   grid-template-columns: repeat(auto-fit, minmax(clamp(200px, 25vw, 300px), 1fr));
 }
 
-/* Sidebar responsive scaling */
 .sidebar {
-  /* Don't override the sidebar width - let Tailwind handle it */
   @media (max-width: 1024px) {
     width: 100%;
     position: relative;
   }
 }
 
-/* Button and interactive element scaling */
 button, .btn {
   padding: clamp(0.5rem, 1vw, 1rem) clamp(0.75rem, 1.5vw, 1.5rem);
   font-size: clamp(0.875rem, 1.5vw, 1rem);
   border-radius: clamp(0.25rem, 0.5vw, 0.5rem);
 }
 
-/* Filter bar scaling */
 .filter-bar {
   padding: var(--spacing-unit);
   gap: var(--spacing-unit);
@@ -244,14 +129,12 @@ button, .btn {
   font-size: clamp(0.875rem, 1.5vw, 1rem);
 }
 
-/* Ensure proper zoom behavior for modern browsers */
 @supports (zoom: 1) {
   .zoom-container {
     zoom: calc(var(--scale-factor));
   }
 }
 
-/* Fallback for browsers that don't support zoom */
 @supports not (zoom: 1) {
   .zoom-container {
     transform: scale(var(--scale-factor));
@@ -259,7 +142,6 @@ button, .btn {
   }
 }
 
-/* High DPI display support */
 @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
   body {
     -webkit-font-smoothing: antialiased;
@@ -267,68 +149,56 @@ button, .btn {
   }
 }
 
-/* Ultra-wide screen support */
 @media (min-width: 2560px) {
   :root {
     --scale-factor: 1.2;
   }
-  
   .dashboard-container {
     max-width: 2400px;
     margin: 0 auto;
   }
 }
 
-/* Very small screen optimization */
 @media (max-width: 480px) {
   :root {
     --scale-factor: 0.9;
     --spacing-unit: 0.5rem;
   }
-  
   .dashboard-container {
     padding: 0.5rem;
   }
 }
 
-/* Main content area scaling */
 main {
-  /* Ensure main content scales proportionally */
   overflow-x: auto;
-  min-width: 0; /* Allow flexbox to shrink */
+  min-width: 0;
 }
 
-/* Responsive spacing */
 .space-y-6 > * + * {
   margin-top: var(--spacing-unit);
 }
 
-/* Header responsive scaling */
 .dashboard-header {
   padding: var(--spacing-unit);
   border-radius: clamp(0.5rem, 1vw, 1rem);
 }
 
-/* Chart responsive height */
 .chart-content {
   height: clamp(200px, 30vh, 400px);
   width: 100%;
 }
 
-/* Responsive table */
 .responsive-table {
   overflow-x: auto;
   font-size: clamp(0.75rem, 1.5vw, 1rem);
 }
 
-/* Responsive modal/dialog */
 .modal-content {
   width: clamp(300px, 90vw, 800px);
   max-height: clamp(400px, 80vh, 600px);
   overflow-y: auto;
 }
 
-/* Responsive navigation */
 .nav-item {
   font-size: clamp(0.875rem, 1.5vw, 1rem);
   padding: clamp(0.5rem, 1vw, 0.75rem);

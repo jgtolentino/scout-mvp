@@ -1,0 +1,30 @@
+name: AI-Assisted Validation
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'specs/dashboard_end_state.yaml'
+
+jobs:
+  validate-config:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Validate Dashboard Configuration
+        # Replace with your actual AI validation action or a generic linter
+        run: echo "Placeholder for AI validation or YAML linting."
+        # Example of a generic YAML linter if you have one configured:
+        # uses: github/super-linter@v4 # Requires .github/linters/.yamllint.yml or similar
+        # env:
+        #   VALIDATE_YAML: true
+
+      - name: AI-Assisted Dashboard Validation
+        uses: copilotkit/validate-action@v2
+        with:
+          config-path: specs/dashboard_end_state.yaml
+          ruleset: production
+          fail-on-warnings: true
+          ai-feedback: true 

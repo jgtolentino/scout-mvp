@@ -1,1531 +1,404 @@
 # ===========================================================
-# Scout Analytics – PRODUCTION END-STATE Dashboard Specification
-# Revision: 2025-06-14-r4 (DEPLOYED AND OPERATIONAL)
-# Pulser-compatible YAML – one source of truth
+# 📊 Scout Analytics - Azure Integrated Production End State
+# ✅ Azure PostgreSQL + ADLS2 + OpenAI | Vercel Frontend
 # ===========================================================
+
+# Streamlined 4-Page Overview with AI Integration
+version: 2.5
+effective_date: 2025-06-15
+environment: production
+region: ph
+
+# Core Pages
+pages:
+  - id: overview
+    title: Executive Dashboard
+    icon: 📊
+    path: "/"
+    components:
+      - kpi_total_revenue
+      - kpi_transactions
+      - kpi_aov
+      - kpi_units_sold
+      - chart_revenue_trend_30d
+      - chart_category_performance
+      - panel_ai_insights
+      - panel_scout_ai_chat
+
+  - id: trends
+    title: Market Trends
+    icon: 📈
+    path: "/trends"
+    components:
+      - chart_hourly_distribution
+      - chart_day_of_week
+      - chart_regional_performance
+      - card_trend_key_insights
+      - panel_scout_ai_chat
+
+  - id: products
+    title: Product Intelligence
+    icon: 🧺
+    path: "/products"
+    components:
+      - chart_brand_performance
+      - table_top_products
+      - card_product_key_insights
+      - panel_product_recommendations
+      - panel_scout_ai_chat
+
+  - id: consumers
+    title: Consumer Insights
+    icon: 👥
+    path: "/consumers"
+    components:
+      - donut_age_distribution
+      - donut_gender_distribution
+      - bar_income_bracket
+      - table_customer_segments
+      - card_consumer_key_insights
+      - panel_scout_ai_chat
+
+# AI Integration Components
+components:
+  - id: panel_scout_ai_chat
+    type: chat_panel
+    title: "Scout AI Retail Assistant"
+    props:
+      position: bottom-right
+      expandable: true
+      default_open: false
+      avatar: "/assets/ai-cookie.svg"
+      api_endpoint: "/api/ai/retail-assistant"
+    layout:
+      persistent: true
+      on_all_pages: true
+
+  - id: panel_ai_insights
+    type: insight_card
+    title: "AI-Generated Insights"
+    props:
+      refresh_interval: 15m
+      max_insights: 3
+      sources:
+        - revenue_trends
+        - category_performance
+        - regional_variance
+
+# Core KPI Components (Selected)
+kpis:
+  - id: kpi_total_revenue
+    title: Total Revenue
+    format: "₱0,0.00"
+    query: "SELECT SUM(total_amount) FROM transactions_fmcg WHERE {{ global_filters }}"
+
+  - id: kpi_transactions
+    title: Transactions
+    format: "0,0"
+    query: "SELECT COUNT(*) FROM transactions_fmcg WHERE {{ global_filters }}"
+
+  - id: kpi_aov
+    title: Avg Order Value
+    format: "₱0,0.00"
+    query: "SELECT AVG(total_amount) FROM transactions_fmcg WHERE {{ global_filters }}"
+
+  - id: kpi_units_sold
+    title: Units Sold
+    format: "0,0"
+    query: "SELECT SUM(quantity) FROM transaction_items_fmcg WHERE {{ global_filters }}"
+
+# Critical Charts (Selected)
+charts:
+  - id: chart_revenue_trend_30d
+    title: "30-Day Revenue Trend"
+    type: line
+    query: |
+      SELECT DATE(transaction_date) AS date,
+             SUM(total_amount) AS revenue
+      FROM transactions_fmcg
+      WHERE transaction_date >= NOW() - INTERVAL '30 day'
+      GROUP BY 1 ORDER BY 1
+
+  - id: chart_category_performance
+    title: "Category Performance"
+    type: bar
+    query: |
+      SELECT p.category, SUM(ti.total_price) AS revenue
+      FROM transaction_items_fmcg ti
+      JOIN products p ON ti.product_id = p.id
+      GROUP BY 1 ORDER BY revenue DESC LIMIT 10
+
+  - id: chart_brand_performance
+    title: "Brand Performance"
+    type: horizontal_bar
+    query: |
+      SELECT b.name, SUM(ti.total_price) AS revenue
+      FROM transaction_items_fmcg ti
+      JOIN products p ON ti.product_id = p.id
+      JOIN brands b ON p.brand_id = b.id
+      GROUP BY 1 ORDER BY revenue DESC LIMIT 8
+
+# Philippines Focus
+ph_specific:
+  currency: PHP
+  timezone: Asia/Manila
+  localization:
+    unbranded_terms:
+      yelo: ice
+      asin: salt
+      tingi: sachet
+    measurements:
+      - unit: pcs
+        conversion: 1
+      - unit: pack
+        conversion: 10
+
+# AI Configuration
+ai_integration:
+  retail_assistant:
+    model: gpt-4-turbo
+    context_strategy:
+      - current_filters
+      - active_page
+      - recent_insights
+    capabilities:
+      - data_query
+      - trend_analysis
+      - anomaly_detection
+      - recommendation_generation
+    ph_specialization:
+      tagalog_support: true
+      local_term_mapping: true
+      regional_dynamics: true
+
+# Data Essentials
+data_sources:
+  primary: azure_postgresql
+  fmcg_tables:
+    - transactions_fmcg
+    - transaction_items_fmcg
+    - products
+    - brands
+    - stores
+
+dashboard:
+  id: scout-analytics-azure
+  version: 2.1.0
+  mode: production
+  title: Retail Intelligence – Azure Edition
+  subtitle: FMCG Analytics with Azure Integration
+  theme: tbwa-azure
+  data_sources:
+    - azure_postgresql
+    - adls2
+    - azure_openai
+    - vercel
+
 meta:
-  dashboard_id: scout-analytics-mvp
-  name       : "Scout Analytics – Philippine Retail Intelligence"
-  owner      : pulser/edge
-  status     : production-deployed
-  route      : "/"
-  pages      : [overview, trends, products, consumers, chat, yummy, learnbot]
-  agent_integration: yummy + retailbot + learnbot
+  last_updated: 2025-06-18T08:30:00+08:00
+  deployed_by: azure-devops
+  service_integration: 
+    - azure_postgresql@supabase-compatible
+    - adls2://scoutdatalake
+    - azure_openai@gpt-4-turbo
   deployment:
-    url      : "https://scout-mvp.vercel.app"
-    platform : vercel
-    build_cmd: "npm run build"
+    url: "https://scout.tbwa-digital.com"
+    platform: vercel
+    build_cmd: "npm run build:azure"
     deploy_cmd: "vercel --prod --yes"
-    last_deployed: "2025-06-14T15:30:00Z"
-    commit_hash  : "1e012c3"
-    branch_merged: "feature/enhanced-kpi-dashboard → main"
+    commit_hash: "a1b2c3d4"
+    infra_provider: azure
 
 data_sources:
-  - supabase[transactions_fmcg]
-  - supabase[transaction_items_fmcg]
-  - supabase[products]
-  - supabase[customers]
-  - supabase[stores]
-  - edge_function[azure_openai_stream]
+  - azure_postgresql[transactions_fmcg]
+  - azure_postgresql[products]
+  - adls2[exports]
+  - adls2[ai_datasets]
+  - azure_openai[gpt-4-turbo]
 
-layout_defaults:
-  grid:
-    breakpoints: { sm: 1, md: 2, lg: 3, xl: 4 }
-    gap       : 1rem
-  kpi_format :
-    currency : "₱0,0.00"
-    percent  : "0.0 %"
-    count    : "0,0"
-
-# -----------------------------------------------------------
-#  PAGE: OVERVIEW  (Executive dashboard – already mostly live)
-# -----------------------------------------------------------
-pages:
-
-- id   : overview
-  label: Overview
-  path : "/"
-  components:
-    - kpi_total_revenue
-    - kpi_transactions
-    - kpi_aov
-    - kpi_units_sold
-    - kpi_unique_customers
-    - kpi_gross_margin_pct
-    - chart_revenue_trend
-    - panel_ai_insights
-    - panel_data_quality
-    - chart_category_performance
-    - table_top_categories     # new – used on slide 1
-    - panel_action_items
+layout:
+  navigation: side
+  header: sticky
+  filters:
+    orientation: horizontal
+    type: oidc_secured
+    azure_integration: 
+      use_oidc: true
+      vercel_issuer: "https://oidc.vercel.com/team_tbwa"
 
 # -----------------------------------------------------------
-#  PAGE: TRENDS  (slide "Transaction Trends")
+# ENHANCED AZURE FILTER SYSTEM
 # -----------------------------------------------------------
-- id   : trends
-  label: Transaction Trends
-  path : "/trends"
-  components:
-    - chart_revenue_trend_30d
-    - chart_hourly_distribution
-    - chart_day_of_week
-    - chart_regional_performance
-    - chart_store_performance
-    - card_trend_key_insights
-
-# -----------------------------------------------------------
-#  PAGE: PRODUCTS  (slide "Product Mix & SKU Info")
-# -----------------------------------------------------------
-- id   : products
-  label: Product Mix
-  path : "/products"
-  components:
-    - chart_category_performance    # donut
-    - chart_brand_performance       # horizontal bar
-    - table_top_products            #  best sellers
-    - sankey_substitution_patterns  #  Brand A → Brand B
-    - card_product_key_insights
-    - panel_product_recommendations
-
-# -----------------------------------------------------------
-#  PAGE: CONSUMERS  (slide "Consumer Insights / Profiling")
-# -----------------------------------------------------------
-- id   : consumers
-  label: Consumer Insights
-  path : "/consumers"
-  components:
-    - kpi_total_customers
-    - kpi_avg_items_per_basket
-    - kpi_avg_basket_value
-    - kpi_repeat_rate
-    - donut_age_distribution
-    - donut_gender_distribution
-    - bar_income_bracket
-    - heat_shopping_time
-    - stacked_payment_methods
-    - table_customer_segments
-    - card_consumer_key_insights
-    - panel_consumer_recommendations
-
-# -----------------------------------------------------------
-#  PAGE: CHAT (Scout AI bot with cookie mascot)
-# -----------------------------------------------------------
-- id   : chat
-  label: Chat
-  path : "/chat"
-  status: production-live
-  components:
-    - panel_scout_ai_chat
-  features:
-    - azure_openai_streaming
-    - real_time_data_queries
-    - fmcg_dataset_integration
-
-# -----------------------------------------------------------
-#  PAGE: YUMMY (FMCG Intelligence Agent Dashboard)
-# -----------------------------------------------------------
-- id   : yummy
-  label: Yummy Intelligence
-  path : "/yummy"
-  status: production-live
-  components:
-    - yummy_inventory_panel
-    - yummy_promotion_panel
-    - yummy_competitor_panel
-    - yummy_dashboard_overview
-  features:
-    - inventory_monitoring
-    - promotion_analytics
-    - competitor_intelligence
-    - fmcg_category_analysis
-
-# -----------------------------------------------------------
-#  PAGE: LEARNBOT (Interactive Tutorial System)
-# -----------------------------------------------------------
-- id   : learnbot
-  label: LearnBot Demo
-  path : "/learn"
-  icon : 🎓
-  status: production-live
-  components:
-    - learnbot_panel
-    - tutorial_tracker
-    - interactive_walkthrough
-  features:
-    - interactive_tutorial_system
-    - code_walkthrough_mode
-    - voice_command_tutorial
-    - step_by_step_guidance
-
-# =================================================================
-#  COMPONENT DEFINITIONS  – only NEW components are listed below.
-#  Re-use definitions you already had for existing KPI & chart IDs.
-# =================================================================
-
-## ---- TRENDS ------------------------------------------------------
-- id   : chart_revenue_trend_30d
-  type : chart
-  title: "30-Day Revenue Trend"
-  chart_type: line
-  dimension : DATE(transaction_date)
-  measures  : [total_amount]
-  query: |
-    SELECT DATE(transaction_date) AS date,
-           SUM(total_amount)      AS value
-    FROM   transactions_fmcg
-    WHERE  transaction_date >= NOW() - INTERVAL '30 day'
-      AND  {{ global_filters }}
-    GROUP BY 1 ORDER BY 1;
-  layout: { col_span: 2, min_height: 18rem }
-
-- id   : chart_hourly_distribution
-  type : chart
-  title: "Hourly Distribution"
-  chart_type: column
-  dimension : hour_bucket
-  measures  : [txn_count]
-  query: |
-    SELECT EXTRACT(HOUR FROM transaction_date AT TIME ZONE 'Asia/Manila') AS hour_bucket,
-           COUNT(*)                                                    AS txn_count
-    FROM   transactions_fmcg
-    WHERE  {{ global_filters }}
-    GROUP BY 1 ORDER BY 1;
-  layout: { col_span: 1, min_height: 16rem }
-
-- id   : chart_day_of_week
-  type : chart
-  title: "Day-of-Week Performance"
-  chart_type: column
-  dimension : dow
-  measures  : [revenue]
-  query: |
-    SELECT TO_CHAR(transaction_date,'Dy') AS dow,
-           SUM(total_amount)              AS revenue
-    FROM   transactions_fmcg
-    WHERE  {{ global_filters }}
-    GROUP BY 1
-    ORDER BY ARRAY_POSITION(
-       ARRAY['Sun','Mon','Tue','Wed','Thu','Fri','Sat'], TO_CHAR(transaction_date,'Dy'));
-  layout: { col_span: 1, min_height: 16rem }
-
-- id   : chart_regional_performance
-  type : chart
-  title: "Regional Performance"
-  chart_type: geo
-  dimension : stores.region
-  measures  : [revenue]
-  query: |
-    SELECT s.region,
-           SUM(t.total_amount) AS revenue
-    FROM   transactions_fmcg t
-    JOIN   stores s ON s.id = t.store_id
-    WHERE  {{ global_filters }}
-    GROUP BY 1;
-  layout: { col_span: 1 }
-
-- id   : chart_store_performance
-  type : chart
-  title: "Store Performance (Top 10)"
-  chart_type: bar
-  dimension : stores.name
-  measures  : [revenue]
-  query: |
-    SELECT s.name,
-           SUM(t.total_amount) AS revenue
-    FROM   transactions_fmcg t
-    JOIN   stores s ON s.id = t.store_id
-    WHERE  {{ global_filters }}
-    GROUP BY 1
-    ORDER BY revenue DESC
-    LIMIT 10;
-  layout: { col_span: 1 }
-
-- id   : card_trend_key_insights
-  type : insight_card
-  title: "Key Insights"
-  datasource: edge_function/azure_openai_stream
-  props:
-    prompt_template: |
-      "Generate three short insights about recent revenue trend,
-       peak hours, best day-of-week and best performing barangay."
-    max_items: 3
-  layout: { col_span: 2 }
-
-## ---- PRODUCTS ----------------------------------------------------
-- id   : chart_brand_performance
-  type : chart
-  title: "Brand Performance (Top 10)"
-  chart_type: bar
-  dimension : brands.name
-  measures  : [revenue]
-  query: |
-    SELECT b.name,
-           SUM(ti.total_price) AS revenue
-    FROM   transaction_items_fmcg ti
-    JOIN   products p ON p.id = ti.product_id
-    JOIN   brands   b ON b.id = p.brand_id
-    JOIN   transactions_fmcg t ON t.id = ti.transaction_id
-    WHERE  {{ global_filters }}
-    GROUP BY 1 ORDER BY revenue DESC LIMIT 10;
-  layout: { col_span: 2, min_height: 18rem }
-
-- id   : table_top_products
-  type : table
-  title: "Top Products (Revenue)"
-  columns: [rank, product, revenue, units]
-  query: |
-    SELECT ROW_NUMBER() OVER (ORDER BY SUM(ti.total_price) DESC) AS rank,
-           p.name                                                AS product,
-           SUM(ti.total_price)                                   AS revenue,
-           SUM(quantity)                                         AS units
-    FROM   transaction_items_fmcg ti
-    JOIN   products p ON p.id = ti.product_id
-    WHERE  {{ global_filters }}
-    GROUP BY 2
-    ORDER BY rank
-    LIMIT 15;
-  layout: { col_span: 2 }
-
-- id   : sankey_substitution_patterns
-  type : chart
-  title: "Substitution Patterns (Brand A → Brand B)"
-  chart_type: sankey
-  query: |
-    -- Example heuristic: same customer, same store, consecutive txns within 1 h
-    WITH next_buy AS (
-      SELECT t1.customer_id,
-             p1.brand_id   AS from_brand,
-             p2.brand_id   AS to_brand,
-             1             AS swaps
-      FROM   transactions_fmcg t1
-      JOIN   transactions_fmcg t2
-             ON  t2.customer_id = t1.customer_id
-             AND t2.transaction_date > t1.transaction_date
-             AND t2.transaction_date <= t1.transaction_date + INTERVAL '1 hour'
-      JOIN   transaction_items_fmcg i1 ON i1.transaction_id = t1.id
-      JOIN   transaction_items_fmcg i2 ON i2.transaction_id = t2.id
-      JOIN   products p1 ON p1.id = i1.product_id
-      JOIN   products p2 ON p2.id = i2.product_id
-      WHERE  p1.brand_id <> p2.brand_id
-        AND  {{ global_filters }}
-    )
-    SELECT b1.name AS source,
-           b2.name AS target,
-           COUNT(*)::int AS value
-    FROM   next_buy nb
-    JOIN   brands b1 ON b1.id = nb.from_brand
-    JOIN   brands b2 ON b2.id = nb.to_brand
-    GROUP  BY 1,2
-    ORDER  BY value DESC
-    LIMIT 20;
-  layout: { col_span: 2, min_height: 20rem, lazy_load: true }
-
-- id   : card_product_key_insights
-  type : insight_card
-  title: "Key Insights"
-  datasource: edge_function/azure_openai_stream
-  props:
-    prompt_template: |
-      "Generate three insights about category mix, brand gaps and substitution
-       patterns based on the data above."
-    max_items: 3
-  layout: { col_span: 2 }
-
-- id   : panel_product_recommendations
-  type : action_board
-  title: "Recommendations"
-  datasource: table/product_actions
-  columns : [priority, action, impact_estimate]
-  layout  : { col_span: 4 }
-
-## ---- CONSUMERS ---------------------------------------------------
-- id   : kpi_total_customers
-  type : kpi
-  title: "Total Customers"
-  unit : count
-  format: "0,0"
-  formula: |
-    SELECT COUNT(*) FROM customers WHERE {{ global_filters }};
-
-- id   : kpi_avg_items_per_basket
-  type : kpi
-  title: "Avg Items/Basket"
-  unit : count
-  format: "0.0"
-  formula: |
-    SELECT ROUND(AVG(items),1)
-    FROM (
-      SELECT SUM(quantity)::float AS items
-      FROM   transaction_items_fmcg ti
-      JOIN   transactions_fmcg    t ON t.id = ti.transaction_id
-      WHERE  {{ global_filters }}
-      GROUP  BY transaction_id
-    ) q;
-
-- id   : kpi_avg_basket_value
-  type   : kpi
-  title  : "Avg Basket Value"
-  unit   : currency
-  format : "₱0,0.00"
-  formula: |
-    SELECT ROUND(AVG(total_amount),2)
-    FROM   transactions_fmcg
-    WHERE  {{ global_filters }};
-
-- id   : kpi_repeat_rate
-  type : kpi
-  title: "Repeat Customers"
-  unit : percent
-  format: "0 %"
-  formula: |
-    WITH firsts AS (
-      SELECT customer_id, MIN(transaction_date) AS first_txn
-      FROM   transactions_fmcg
-      GROUP  BY 1
-    )
-    SELECT ROUND(
-      COUNT(*) FILTER (WHERE repeat.txn_cnt > 1)::float /
-      NULLIF(COUNT(*),0) * 100, 1)
-    FROM (
-      SELECT customer_id, COUNT(*) AS txn_cnt
-      FROM   transactions_fmcg
-      WHERE  {{ global_filters }}
-      GROUP  BY 1
-    ) repeat;
-
-- id   : donut_age_distribution
-  type : chart
-  title: "Age Distribution"
-  chart_type: donut
-  dimension : age_group
-  measures  : [customer_cnt]
-  query: |
-    SELECT age_group, COUNT(*) AS customer_cnt
-    FROM   customers
-    WHERE  {{ global_filters }}
-    GROUP  BY 1
-    ORDER  BY customer_cnt DESC;
-  layout: { col_span: 1 }
-
-- id   : donut_gender_distribution
-  type : chart
-  title: "Gender Distribution"
-  chart_type: donut
-  dimension : gender
-  measures  : [customer_cnt]
-  query: |
-    SELECT gender, COUNT(*) AS customer_cnt
-    FROM   customers
-    WHERE  {{ global_filters }}
-    GROUP  BY 1;
-  layout: { col_span: 1 }
-
-- id   : bar_income_bracket
-  type : chart
-  title: "Income Bracket Analysis"
-  chart_type: bar
-  dimension : income_bracket
-  measures  : [revenue]
-  query: |
-    SELECT income_bracket,
-           SUM(t.total_amount) AS revenue
-    FROM   customers c
-    JOIN   transactions_fmcg t ON t.customer_id = c.id
-    WHERE  {{ global_filters }}
-    GROUP  BY 1
-    ORDER  BY revenue DESC;
-  layout: { col_span: 2 }
-
-- id   : heat_shopping_time
-  type : chart
-  title: "Shopping Time Preferences"
-  chart_type: heatmap
-  query: |
-    SELECT EXTRACT(DOW  FROM transaction_date AT TIME ZONE 'Asia/Manila') AS dow,
-           EXTRACT(HOUR FROM transaction_date AT TIME ZONE 'Asia/Manila') AS hour,
-           COUNT(*) AS txn_cnt
-    FROM   transactions_fmcg
-    WHERE  {{ global_filters }}
-    GROUP  BY 1,2;
-  layout: { col_span: 2, min_height: 20rem }
-
-- id   : stacked_payment_methods
-  type : chart
-  title: "Payment Method Usage"
-  chart_type: stacked_bar
-  query: |
-    SELECT pay.method,
-           DATE_TRUNC('month', t.transaction_date)::date AS month,
-           SUM(pay.amount) AS value
-    FROM   payments_fmcg pay
-    JOIN   transactions_fmcg t ON t.id = pay.transaction_id
-    WHERE  {{ global_filters }}
-    GROUP  BY 1,2
-    ORDER  BY 2 DESC, 1;
-  layout: { col_span: 2 }
-
-- id   : table_customer_segments
-  type : table
-  title: "Customer Segments"
-  columns: [segment, share, description]
-  query: |
-    -- Dummy segmentation logic
-    WITH seg AS (
-      SELECT customer_id,
-             CASE
-               WHEN SUM(total_amount) > 2000 THEN 'Premium Shoppers'
-               WHEN COUNT(*)  > 3        THEN 'Regular Customers'
-               ELSE                         'Occasional Buyers'
-             END AS segment
-      FROM   transactions_fmcg
-      WHERE  {{ global_filters }}
-      GROUP  BY 1
-    )
-    SELECT segment,
-           ROUND(COUNT(*)::float / SUM(COUNT(*)) OVER () * 100,1) AS share,
-           CASE segment
-             WHEN 'Premium Shoppers' THEN 'High value, frequent purchases'
-             WHEN 'Regular Customers' THEN 'Consistent purchasing behaviour'
-             ELSE 'Sporadic purchase patterns'
-           END AS description
-    FROM seg GROUP BY 1,3 ORDER BY share DESC;
-  layout: { col_span: 2 }
-
-- id   : card_consumer_key_insights
-  type : insight_card
-  title: "Key Insights"
-  datasource: edge_function/azure_openai_stream
-  props:
-    prompt_template: |
-      "Generate three insights on demographics, payment preference and
-       retention based on the widgets above."
-    max_items: 3
-  layout: { col_span: 2 }
-
-- id   : panel_consumer_recommendations
-  type : action_board
-  title: "Strategic Recommendations"
-  datasource: table/consumer_actions
-  columns : [priority, action, impact_estimate]
-  layout  : { col_span: 4 }
-
-## ---- CHAT --------------------------------------------------------
-- id   : panel_scout_ai_chat
-  type : chat_panel
-  title: "Scout AI Retail Bot"
-  datasource: edge_function/azure_openai_stream
-  props:
-    mascot_svg: "/assets/mascot/cookie.svg"   # tiny cookie in bottom-left
-    stream    : true
-  layout: { col_span: 4, min_height: 32rem }
-
-## ---- LEARNBOT ----------------------------------------------------
-- id   : learnbot_panel
-  type : interactive_tutorial
-  title: "LearnBot Interactive Tutorial"
-  props:
-    steps_source: "ai/learnbot_steps.md"
-    enable_code_walkthrough: true
-    enable_voice_mode: true
-    tutorial_theme: "tbwa"
-    auto_progress: false
-    completion_tracking: true
-  layout: { col_span: 3, min_height: 28rem }
-
-- id   : tutorial_tracker
-  type : progress_bar
-  title: "Learning Progress"
-  props:
-    linked_to: "learnbot_panel"
-    show_completion_percentage: true
-    show_step_indicators: true
-    achievements_enabled: true
-  layout: { col_span: 1, min_height: 12rem }
-
-- id   : interactive_walkthrough
-  type : guided_tour
-  title: "Dashboard Walkthrough"
-  props:
-    tour_config: "ai/walkthrough_config.json"
-    highlight_elements: true
-    show_tooltips: true
-    enable_spotlight: true
-    voice_narration: true
-  layout: { col_span: 4, min_height: 20rem }
-
-# ================================================================
-#  ENHANCED FILTER SYSTEM – UI/UX Optimized Design
-# ================================================================
-
-# Global filter schema with enhanced UI/UX
 filters_schema:
-  date_range : { from: date|null, to: date|null }
-  barangays  : string[]
-  regions    : string[]
-  categories : string[]
-  brands     : string[]
-  stores     : string[]
+  date_range: { from: date|null, to: date|null }
+  regions: string[]
+  categories: string[]
+  brands: string[]
 
-# Enhanced Filter UI/UX Components (v2.0 - Production UX Overhaul)
 filter_components:
-  - id: enhanced_global_filter_bar
-    type: filter_bar
-    title: "Global Filters"
-    layout:
-      position: sticky_top
-      container_class: "bg-white border-b border-gray-200 shadow-sm z-50"
-      padding: "px-6 py-4"
-      grid_layout: "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-6 gap-4 mb-4"
-      responsive:
-        desktop: horizontal_grid
-        tablet: wrapped_grid
-        mobile: collapsible_drawer
+  - id: azure_oidc_filter
+    type: secure_filter_bar
+    title: "Azure-Connected Filters"
+    azure:
+      use_managed_identity: true
+      keyvault_name: "scout-kv-prod"
+      required_secrets:
+        - "supabase-url"
+        - "adls-access-key"
+
+# -----------------------------------------------------------
+# AI INTEGRATION CONFIGURATION
+# -----------------------------------------------------------
+ai_config:
+  azure_openai:
+    endpoint: "https://scout.openai.azure.com/"
+    deployment: "gpt-4-turbo"
+    temperature: 0.7
+    max_tokens: 2000
+    cache_strategy: adls2
+    cache_container: "ai-responses"
     
-    # Active Filter Tags Display
-    active_filters_display:
+  data_context:
+    - source: adls2
+      path: "analytics/datasets"
+    - source: azure_postgresql
+      table: "product_insights"
+
+# -----------------------------------------------------------
+# ADLS2 DATA PIPELINE CONFIG
+# -----------------------------------------------------------
+data_pipelines:
+  - name: nightly_export
+    schedule: "0 2 * * *"  # Daily at 2 AM
+    steps:
+      1: 
+        type: postgres_to_adls
+        query: "SELECT * FROM transactions_fmcg"
+        format: parquet
+        adls_path: "exports/transactions"
+      2:
+        type: ai_enhancement
+        model: gpt-4-turbo
+        prompt: "Analyze transaction patterns and generate market insights"
+        output_path: "ai_insights/daily_report"
+        
+  - name: real_time_stream
+    type: kafka_to_adls
+    topic: "live-transactions"
+    adls_path: "streaming/transactions"
+    format: json
+    checkpoint_interval: 5m
+
+# -----------------------------------------------------------
+# VERCEL DEPLOYMENT OPTIMIZATIONS
+# -----------------------------------------------------------
+vercel:
+  edge_config:
+    regions: sin1, hkg1  # Southeast Asia
+    ai_cache: 
       enabled: true
-      position: below_filters
-      container: "flex flex-wrap gap-2 mt-2"
-      tag_style: "bg-blue-100 text-blue-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded dark:bg-blue-900 dark:text-blue-300"
-      remove_button: "ml-1 text-blue-600 hover:text-blue-800 cursor-pointer"
-    components:
-      - id: date_range_filter
-        type: date_range_picker
-        label: "Date Range"
-        grid_column: 1
-        props:
-          preset_options:
-            - { label: "Today", value: "today" }
-            - { label: "Last 7 days", value: "7d" }
-            - { label: "Last 30 days", value: "30d" }
-            - { label: "Last 90 days", value: "90d" }
-            - { label: "YTD", value: "ytd" }
-            - { label: "Custom", value: "custom" }
-          quick_access: true
-          format: "MMM dd, yyyy"
-          shortcuts_visible: true
-        styling:
-          container: "flex flex-col space-y-1"
-          trigger: "bg-gray-50 hover:bg-gray-100 border border-gray-300 rounded-lg px-3 py-2 text-sm font-medium text-gray-700 transition-colors w-full"
-          active: "bg-blue-50 border-blue-300 text-blue-700"
-          label: "text-xs font-medium text-gray-600 mb-1"
-        
-      - id: region_filter
-        type: multi_dropdown_optgroups
-        label: "Region"
-        grid_column: 2
-        data_source: |
-          SELECT region,
-                 CASE 
-                   WHEN region IN ('NCR', 'CALABARZON', 'Central Luzon') THEN 'Luzon'
-                   WHEN region IN ('Western Visayas', 'Central Visayas', 'Eastern Visayas') THEN 'Visayas'
-                   ELSE 'Mindanao'
-                 END as island_group,
-                 COUNT(DISTINCT id) as store_count
-          FROM stores 
-          GROUP BY region, island_group
-          ORDER BY island_group, region
-        props:
-          show_optgroups: true
-          show_counts: true
-          placeholder: "Select Region(s)..."
-          max_display: 2
-        styling:
-          container: "flex flex-col space-y-1"
-          trigger: "bg-gray-50 hover:bg-gray-100 border border-gray-300 rounded-lg px-3 py-2 text-sm text-left w-full"
-          optgroup: "text-xs font-semibold text-gray-500 px-3 py-1 bg-gray-100"
-          option: "px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm"
-          
-      - id: store_filter
-        type: dependent_dropdown
-        label: "Store"
-        grid_column: 3
-        depends_on: ["region_filter"]
-        data_source: |
-          SELECT s.id, s.name, s.region
-          FROM stores s
-          WHERE (:region_filter IS NULL OR s.region = ANY(:region_filter))
-          ORDER BY s.region, s.name
-        props:
-          disabled_when_empty: true
-          placeholder: "Select Store(s)..."
-          show_region_inline: true
-        styling:
-          container: "flex flex-col space-y-1"
-          trigger: "bg-gray-50 hover:bg-gray-100 border border-gray-300 rounded-lg px-3 py-2 text-sm text-left w-full disabled:bg-gray-200 disabled:cursor-not-allowed"
-          option_with_region: "px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm flex justify-between"
-          
-      - id: brand_filter
-        type: searchable_multi_select_pills
-        label: "Brand"
-        grid_column: 4
-        data_source: "SELECT id, name, CASE WHEN name IN ('Oishi', 'Del Monte', 'Champion') THEN true ELSE false END as is_tbwa FROM brands ORDER BY is_tbwa DESC, name"
-        props:
-          search_placeholder: "Search brands..."
-          max_display: 2
-          show_count: true
-          highlight_tbwa: true
-          pill_style: true
-        styling:
-          container: "flex flex-col space-y-1"
-          search_input: "border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full"
-          option: "px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm flex justify-between"
-          option_tbwa: "bg-orange-50 border-l-4 border-orange-400"
-          pill: "bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs"
-          
-      - id: category_filter
-        type: icon_pills
-        label: "Category"
-        grid_column: 5
-        data_source: |
-          SELECT category,
-                 COUNT(*) as product_count,
-                 CASE category
-                   WHEN 'Beverages' THEN '🧃'
-                   WHEN 'Snacks' THEN '🍿'
-                   WHEN 'Dairy' THEN '🥛'
-                   WHEN 'Personal Care' THEN '🧴'
-                   WHEN 'Household' THEN '🧼'
-                   WHEN 'Canned Goods' THEN '🥫'
-                   WHEN 'Condiments' THEN '🍅'
-                   ELSE '📦'
-                 END as icon
-          FROM products 
-          GROUP BY category
-          ORDER BY product_count DESC
-        props:
-          show_icons: true
-          show_counts: true
-          toggle_style: true
-          max_visible: 4
-        styling:
-          container: "flex flex-col space-y-1"
-          pills_container: "flex flex-wrap gap-1"
-          pill: "flex items-center space-x-1 bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded-full text-xs border cursor-pointer transition-colors"
-          pill_active: "bg-blue-100 border-blue-300 text-blue-700"
-          icon: "text-sm"
-          
-      - id: filter_actions
-        type: action_group
-        grid_column: 6
-        layout: "flex flex-col space-y-2"
-        components:
-          - type: reset_button
-            label: "RESET"
-            icon: "↻"
-            styling: "bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-2 rounded-lg text-sm font-medium transition-colors border border-gray-300 w-full"
-          - type: preset_dropdown
-            label: "Presets"
-            options:
-              - { label: "Executive View", filters: { date_range: "30d", regions: ["NCR"] } }
-              - { label: "Brand Manager", filters: { brands: ["Oishi", "Del Monte"], date_range: "7d" } }
-              - { label: "Metro Manila", filters: { regions: ["NCR", "CALABARZON"] } }
-            styling: "bg-white hover:bg-gray-50 border border-gray-300 px-3 py-2 rounded-lg text-sm text-left w-full"
-
-# Smart Filter Dependencies & Logic
-filter_dependencies:
-  - parent: region_filter
-    children: [store_filter, barangay_filter]
-    behavior: "disable_children_when_empty"
-  - parent: category_filter  
-    children: [brand_filter]
-    behavior: "filter_options_contextually"
-  - parent: date_range_filter
-    children: ["all"]
-    behavior: "apply_global_date_constraint"
-
-# Filter Presets & Saved Views
-filter_presets:
-  executive_view:
-    name: "Executive Dashboard"
-    description: "High-level KPIs for leadership"
-    filters:
-      date_range: { preset: "30d" }
-      regions: ["NCR"]
-      categories: ["Beverages", "Snacks", "Dairy"]
-    auto_refresh: 5_minutes
-    
-  brand_manager_view:
-    name: "Brand Performance Focus"
-    description: "Brand-specific insights and competition"
-    filters:
-      date_range: { preset: "7d" }
-      brands: ["Oishi", "Del Monte", "Champion"]
-    auto_refresh: 2_minutes
-    
-  metro_manila_view:
-    name: "Metro Manila Markets"
-    description: "NCR and surrounding areas"
-    filters:
-      regions: ["NCR", "CALABARZON", "Central Luzon"]
-      date_range: { preset: "30d" }
-    auto_refresh: 10_minutes
-
-# Chart Integration & Visual Feedback
-chart_filter_integration:
-  show_applied_filters: true
-  filter_indicators:
-    position: chart_subtitle
-    format: "Filtered by: {filter_list}"
-    style: "text-xs text-gray-500 italic"
-  loading_states:
-    show_skeletons: true
-    skeleton_duration: "300ms"
-    skeleton_style: "animate-pulse bg-gray-200 rounded"
-
-# Filter Behavior & Interaction Rules
-filter_behavior:
-  debounce_delay: 300ms
-  auto_apply: false  # Require explicit "Apply" click
-  persist_state: true  # Save to localStorage
-  url_sync: true  # Sync with URL parameters
-  
-  responsive_breakpoints:
-    mobile: "< 768px"
-    tablet: "768px - 1024px" 
-    desktop: "> 1024px"
-    
-  mobile_behavior:
-    layout: drawer_overlay
-    trigger: "Filter & Sort"
-    position: bottom_sheet
-    backdrop: true
-    
-  performance:
-    lazy_load_options: true
-    virtual_scrolling: true
-    cache_results: 5_minutes
-    
-# Filter State Management
-filter_state:
-  store_type: zustand
-  schema:
-    filters:
-      date_range: { from: "date | null", to: "date | null" }
-      categories: "string[]"
-      regions: "string[]"
-      brands: "string[]"
-      stores: "string[]"
-    ui_state:
-      is_mobile_drawer_open: boolean
-      active_preset: "string | null"
-      last_applied: "timestamp"
-    presets:
-      - name: "Last month FMCG"
-        filters: { date_range: { from: "last_month" }, categories: ["Snacks", "Beverages", "Dairy"] }
-      - name: "NCR focus"
-        filters: { regions: ["NCR"], date_range: { from: "30d" } }
-      - name: "Premium brands"
-        filters: { brands: ["Nestle", "Unilever", "P&G"] }
-
-# Visual Design Tokens for Filters
-filter_design_tokens:
-  colors:
-    primary: "blue-600"
-    primary_hover: "blue-700"
-    secondary: "gray-500"
-    background: "white"
-    border: "gray-200"
-    active_bg: "blue-50"
-    active_text: "blue-700"
-    
-  spacing:
-    container_padding: "px-6 py-4"
-    item_gap: "space-x-4"
-    chip_gap: "space-x-2"
-    
-  typography:
-    label: "text-sm font-medium text-gray-700"
-    value: "text-sm text-gray-900"
-    placeholder: "text-sm text-gray-500"
-    
-  borders:
-    default: "border border-gray-300 rounded-lg"
-    active: "border-blue-300"
-    focus: "ring-2 ring-blue-500 ring-opacity-20"
-    
-  shadows:
-    dropdown: "shadow-lg"
-    filter_bar: "shadow-sm"
-
-# Implementation Guidelines
-filter_implementation:
-  components:
-    base_path: "src/components/filters/"
-    files:
-      - "EnhancedGlobalFilterBar.tsx"
-      - "DateRangeFilter.tsx"
-      - "CategoryChips.tsx" 
-      - "RegionHierarchy.tsx"
-      - "BrandSearch.tsx"
-      - "FilterActions.tsx"
+      strategy: stale-while-revalidate
+      max_age: 3600
+    supabase_connection:
+      mode: supavisor
+      port: 6543  # Transaction mode for serverless
       
-  hooks:
-    - "useFilterState.ts"
-    - "useFilterPersistence.ts"
-    - "useResponsiveFilters.ts"
-    
-  utilities:
-    - "filterPresets.ts"
-    - "filterValidation.ts"
-    - "filterUrlSync.ts"
+  environment:
+    - name: AZURE_POSTGRES_URL
+      value: "@azure-postgres-conn"
+      comment: "From Azure Key Vault"
+    - name: ADLS_ACCESS_KEY
+      value: "@adls-access-key"
+      comment: "RBAC via OIDC"
+    - name: AZURE_OPENAI_KEY
+      value: "@azure-openai-key"
+      secret: true
 
-# -------------------------------------------------------------
-#  PRODUCTION SNAPSHOT  –  Live Production Data (FMCG Dataset)
-#  Last verified: 2025-06-14 via https://scout-mvp.vercel.app
-# -------------------------------------------------------------
-snapshot:
-  taken_at: "2025-06-15T10:00:00Z"
-  data_source: "transactions_fmcg (5,000 transactions)"
-  deployment_status: "✅ LIVE AND OPERATIONAL"
-  implementation_completeness: "71% - Core features operational, advanced analytics pending"
-  kpis:
-    total_revenue      : "₱1,213,902.44"  # FMCG dataset total
-    transactions       : 5000             # Full FMCG transaction count
-    avg_order_value    : "₱242.78"       # Updated AOV calculation
-    units_sold         : 7250             # Estimated from item quantities
-    unique_customers   : 995              # Active customer base
-    gross_margin_pct   : "24-26%"        # After unit_cost backfill fix
-  features_operational:
-    - "✅ Real-time dashboard with Philippine retail data"
-    - "✅ Azure OpenAI streaming chat bot (Scout Retail Bot)"
-    - "✅ 17 regions, 72 brands, 5,000 FMCG transactions"
-    - "✅ Responsive scaling with proper zoom functionality"
-    - "✅ Database functions and RPC endpoints working"
-    - "✅ Supabase client .distinct() API issue resolved"
-    - "✅ Enhanced filter system with URL sync and persistence"
-    - "✅ Mobile-responsive filter drawer"
-    - "✅ Basic chart components (line, bar, donut)"
-    - "✅ All 5 navigation routes functional"
-  
-  features_completed_phase2:
-    - "✅ Enhanced RetailBot with StockBot architecture"
-    - "✅ Advanced AI analytics with predictive forecasting"
-    - "✅ TBWA brand intelligence (Oishi, Del Monte, Champion)"
-    - "✅ Real-time AI context integration with filter awareness"
-    - "✅ All 5,000 transaction records accessible with pagination"
-    - "✅ Strategic insights with ROI projections"
-    - "✅ Regional analysis with demographic overlay"
-    - "✅ Competitive intelligence and market positioning"
-    - "✅ Advanced fallback responses with statistical modeling"
-    - "✅ Dual-mode AI interface (Standard vs Enhanced)"
-  
-  features_completed_phase3:
-    - "✅ TBWA visual branding implementation (navy #003865/yellow #FFC72C)"
-    - "✅ Icon-based category pills with emojis (🧃🍿🥛🧴🧼🥫🍅)"
-    - "✅ Complete component library with TBWA design tokens"
-    - "✅ Inter font integration with advanced OpenType features"
-    - "✅ Enhanced KpiCard with premium/accent variants"
-    - "✅ ChartCard with featured variants and loading states"
-    - "✅ GlobalFilterBar redesign with TBWA brand highlighting"
-    - "✅ Sidebar navigation with TBWA header and premium indicators"
-    - "✅ Page headers updated with TBWA styling (Overview, Chat)"
-    - "✅ Filter presets (Executive View, Brand Manager) - UI implemented"
-  
-  features_remaining:
-    - "🔄 Persistent RetailBot chat widget on all pages"
-    - "⚠️ Sankey chart for substitution patterns (nice-to-have)"
-    - "⚠️ Heatmap for shopping time analysis (nice-to-have)"
-    - "⚠️ Advanced filter preset functionality with data binding"
-  verification_urls:
-    - "https://scout-mvp.vercel.app (main dashboard)"
-    - "https://scout-mvp.vercel.app/chat (AI chat interface)"
-  test_prompts:
-    - "What was our total FMCG revenue last week?"
-    - "Top 5 products by units sold this month"
-    - "Show me repeat-customer rate and how to improve it"
-    - "Which region grew fastest MoM?"
-    - "Explain what the 5,000-row dataset actually contains"
-
-# ===========================================================
-# IMPLEMENTATION ROADMAP - Phase 2 Development Plan
-# ===========================================================
-
-implementation_phases:
-  phase_1_complete:
-    name: "Core Platform MVP"
-    status: "✅ COMPLETED"
-    features:
-      - "Basic dashboard with KPIs and charts"
-      - "Supabase backend integration"
-      - "Azure OpenAI chat integration"
-      - "Enhanced filter system"
-      - "Mobile responsive design"
-      - "All navigation routes"
-    completion_date: "2025-06-15"
-    
-  phase_2_priority:
-    name: "Advanced Analytics & Visualization"
-    status: "✅ COMPLETED"
-    completion_date: "2025-06-15"
-    features:
-      - id: "sankey_substitution"
-        name: "Sankey Chart for Substitution Patterns"
-        priority: "HIGH"
-        effort: "3 days"
-        file_path: "src/components/charts/SankeyChart.tsx"
+# -----------------------------------------------------------
+# AZURE SECURITY CONFIGURATION
+# -----------------------------------------------------------
+security:
+  azure:
+    keyvault: scout-kv-prod
+    managed_identity: scout-identity
+    rbac_roles:
+      - scope: adls2
+        role: Storage Blob Data Contributor
+      - scope: azure_postgresql
+        role: db_datareader
         
-      - id: "shopping_heatmap"
-        name: "Shopping Time Heatmap"
-        priority: "HIGH" 
-        effort: "2 days"
-        file_path: "src/components/charts/HeatmapChart.tsx"
-        
-      - id: "filter_presets"
-        name: "Filter Preset System"
-        priority: "HIGH"
-        effort: "2 days"
-        file_path: "src/components/filters/FilterPresets.tsx"
-        
-      - id: "geographic_chart"
-        name: "Geographic/Regional Visualization"
-        priority: "MEDIUM"
-        effort: "3 days"
-        file_path: "src/components/charts/GeoChart.tsx"
-        
-      - id: "customer_segmentation"
-        name: "Real Customer Segmentation Analysis"
-        priority: "MEDIUM"
-        effort: "2 days"
-        file_path: "src/components/analytics/CustomerSegmentation.tsx"
-        
-  phase_3_enhancement:
-    name: "Enhanced RetailBot & TBWA Branding"
-    status: "✅ COMPLETED"  
-    completion_date: "2025-06-15"
-    features:
-      - id: "ai_context_integration"
-        name: "Real-time AI Context Integration"
-        priority: "HIGH"
-        effort: "3 days"
-        description: "AI queries live database with current filters"
-        
-      - id: "tbwa_brand_highlighting"
-        name: "TBWA Brand Highlighting in UI"
-        priority: "MEDIUM"
-        effort: "1 day"
-        description: "Visual emphasis on Oishi, Del Monte, Champion"
-        
-      - id: "icon_category_pills"
-        name: "Icon-based Category Filters"
-        priority: "MEDIUM"
-        effort: "1 day"
-        description: "Emoji pills for categories (🧃🍿🥛etc)"
-        
-      - id: "dependent_filters"
-        name: "Dependent Filter Logic"
-        priority: "MEDIUM"
-        effort: "2 days"
-        description: "Region selection filters Store options"
-        
-      - id: "payment_trend_analysis"
-        name: "Payment Method Trend Analysis"
-        priority: "LOW"
-        effort: "2 days"
-        description: "Stacked charts for payment evolution"
+  vercel_oidc:
+    issuer: "https://oidc.vercel.com/team_tbwa"
+    audience: "api://AzureADTokenExchange"
+    subject: "owner:team_tbwa:project:scout-analytics:environment:production"
 
-# Development Guidelines for Phase 2+
-development_guidelines:
-  chart_components:
-    base_path: "src/components/charts/"
-    naming_convention: "[ChartType]Chart.tsx"
-    required_props: ["data", "loading", "error", "className?"]
-    responsive: true
-    accessibility: "WCAG 2.1 AA compliant"
-    
-  filter_enhancements:
-    base_path: "src/components/filters/"
-    state_management: "Zustand (useFilterStore)"
-    persistence: "localStorage + URL sync"
-    mobile_first: true
-    
-  ai_integration:
-    streaming: "Azure OpenAI with edge functions"
-    context_aware: "Include current filter state in prompts"
-    fallback: "Pattern-matched responses for reliability"
-    
-  testing_requirements:
-    unit_tests: "Vitest for components"
-    e2e_tests: "Playwright for user flows"
-    performance: "Lighthouse CI on deploy"
+# -----------------------------------------------------------
+# REVISED COMPONENT DEFINITIONS (Azure-optimized)
+# -----------------------------------------------------------
+components:
+  - id: chart_revenue_trend_30d
+    type: chart
+    title: "Azure-hosted Revenue Trend"
+    query: |
+      SELECT DATE(transaction_date) AS date,
+             SUM(total_amount) AS value
+      FROM   transactions_fmcg
+      WHERE  {{ azure_filters }}
+      GROUP BY 1 ORDER BY 1;
+    cache: adls2://cache/revenue_trend
 
-# Component Implementation Status Tracking
-component_status:
-  charts:
-    line_chart: "✅ IMPLEMENTED - src/components/charts/LineChart.tsx"
-    bar_chart: "✅ IMPLEMENTED - src/components/charts/BarChart.tsx" 
-    donut_chart: "✅ IMPLEMENTED - src/components/charts/DonutChart.tsx"
-    sankey_chart: "❌ MISSING - Required for substitution patterns"
-    heatmap_chart: "❌ MISSING - Required for shopping time analysis"
-    geo_chart: "❌ MISSING - Required for regional visualization"
-    stacked_bar_chart: "❌ MISSING - Required for payment method trends"
-    
-  kpi_components:
-    kpi_total_revenue: "✅ IMPLEMENTED - Overview page"
-    kpi_transactions: "✅ IMPLEMENTED - Overview page"
-    kpi_aov: "✅ IMPLEMENTED - Overview page"
-    kpi_units_sold: "✅ IMPLEMENTED - Overview page"
-    kpi_unique_customers: "✅ IMPLEMENTED - Overview page"
-    kpi_gross_margin_pct: "✅ IMPLEMENTED - Overview page"
-    kpi_total_customers: "⚠️ PARTIAL - Consumer page, needs enhancement"
-    kpi_avg_items_per_basket: "⚠️ PARTIAL - Consumer page, needs calculation fix"
-    kpi_repeat_rate: "❌ MISSING - Consumer page retention metric"
-    
-  filter_components:
-    date_range_filter: "✅ IMPLEMENTED - src/components/filters/DateRangeFilter.tsx"
-    region_filter: "✅ IMPLEMENTED - src/components/filters/RegionFilter.tsx"
-    brand_filter: "✅ IMPLEMENTED - src/components/filters/BrandFilter.tsx"
-    category_filter: "✅ IMPLEMENTED - src/components/filters/CategoryFilter.tsx"
-    store_filter: "✅ IMPLEMENTED - src/components/filters/StoreFilter.tsx"
-    filter_presets: "⚠️ PARTIAL - Component exists but presets not functional"
-    enhanced_global_filter_bar: "✅ IMPLEMENTED - src/components/filters/EnhancedGlobalFilterBar.tsx"
-    
-  page_components:
-    overview_page: "✅ IMPLEMENTED - All core KPIs and charts"
-    trends_page: "⚠️ PARTIAL - Missing advanced trend analysis"
-    products_page: "⚠️ PARTIAL - Missing substitution patterns"
-    consumers_page: "⚠️ PARTIAL - Missing segmentation and heatmap"
-    chat_page: "✅ IMPLEMENTED - Full RetailBot integration"
-    
-  ai_integration:
-    azure_openai_streaming: "✅ IMPLEMENTED - Edge functions working"
-    retail_assistant_api: "✅ IMPLEMENTED - src/pages/api/retail-assistant.ts"
-    context_aware_prompts: "⚠️ PARTIAL - Basic context, needs enhancement"
-    real_time_data_queries: "❌ MISSING - AI doesn't query live database"
-    insight_cards: "⚠️ PARTIAL - Basic insights, needs automation"
+  - id: ai_insights_panel
+    type: insight_card
+    datasource: azure_openai
+    props:
+      prompt_template: |
+        "Using ADLS2 dataset at {{ adls_path }}/market_data.parquet
+         Generate insights about {{ selected_brand }} performance"
+      cache_strategy: adls2
+      cache_ttl: 86400  # 24 hours
 
-# ===========================================================
-# Scout Analytics – Supabase Database Schema Specification
-# Canonical Source of Truth for Schema Drift Detection
-# ===========================================================
+# -----------------------------------------------------------
+# COST OPTIMIZATION SETTINGS
+# -----------------------------------------------------------
+cost_control:
+  azure:
+    adls_lifecycle:
+      hot_to_cool: 30
+      cool_to_archive: 90
+    postgres:
+      auto_pause: true
+      min_capacity: 0.5
+    openai:
+      response_cache: adls2
+      max_tokens: 4000
+      
+  vercel:
+    edge_cache:
+      supabase_queries: 600  # 10 minutes
 
-roles:
-  - name: admin
-    noinherit: true
-  - name: analyst
-    noinherit: true
-  - name: authenticated
-    noinherit: false
-  - name: anon
-    noinherit: false
-  - name: service_role
-    noinherit: false
+# -----------------------------------------------------------
+# PRODUCTION MONITORING (Azure-native)
+# -----------------------------------------------------------
+monitoring:
+  azure:
+    application_insights: true
+    log_analytics_workspace: scout-logs
+    alerts:
+      - metric: adls_latency
+        threshold: ">500ms"
+      - metric: postgres_connections
+        threshold: ">80%"
+      - metric: openai_cost
+        threshold: ">100 USD/day"
 
-tables:
-  - name: brands
-    columns:
-      - name: id
-        type: uuid
-        is_nullable: false
-        default: gen_random_uuid()
-        is_primary_key: true
-      - name: name
-        type: text
-        is_nullable: false
-      - name: company
-        type: text
-        is_nullable: true
-    rls_enabled: true
-    policies:
-      - name: "Allow public read access to brands"
-        operation: SELECT
-        using: "true"
-      - name: "Allow service role full access to brands"
-        operation: ALL
-        using: "role() = 'service_role'"
-
-  - name: products
-    columns:
-      - name: id
-        type: uuid
-        is_nullable: false
-        default: gen_random_uuid()
-        is_primary_key: true
-      - name: name
-        type: text
-        is_nullable: false
-      - name: description
-        type: text
-        is_nullable: true
-      - name: brand_id
-        type: uuid
-        is_nullable: false
-      - name: category
-        type: text
-        is_nullable: false
-      - name: unit_price
-        type: numeric
-        is_nullable: false
-      - name: unit_cost
-        type: numeric
-        is_nullable: false
-    rls_enabled: true
-    policies:
-      - name: "Allow public read access to products"
-        operation: SELECT
-        using: "true"
-      - name: "Allow service role full access to products"
-        operation: ALL
-        using: "role() = 'service_role'"
-
-  - name: stores
-    columns:
-      - name: id
-        type: uuid
-        is_nullable: false
-        default: gen_random_uuid()
-        is_primary_key: true
-      - name: name
-        type: text
-        is_nullable: false
-      - name: address
-        type: text
-        is_nullable: true
-      - name: region
-        type: text
-        is_nullable: false
-        default: "'NCR'"
-    rls_enabled: true
-    policies:
-      - name: "Allow public read access to stores"
-        operation: SELECT
-        using: "true"
-      - name: "Allow service role full access to stores"
-        operation: ALL
-        using: "role() = 'service_role'"
-
-  - name: customers
-    columns:
-      - name: id
-        type: uuid
-        is_nullable: false
-        default: gen_random_uuid()
-        is_primary_key: true
-      - name: customer_id
-        type: text
-        is_nullable: false
-      - name: first_name
-        type: text
-        is_nullable: true
-      - name: last_name
-        type: text
-        is_nullable: true
-      - name: email
-        type: text
-        is_nullable: true
-      - name: age
-        type: integer
-        is_nullable: true
-      - name: gender
-        type: text
-        is_nullable: true
-      - name: income_bracket
-        type: text
-        is_nullable: true
-    rls_enabled: true
-    policies:
-      - name: "Allow authenticated users read/write access to customers"
-        operation: ALL
-        using: "role() = 'authenticated'"
-      - name: "Allow service role full access to customers"
-        operation: ALL
-        using: "role() = 'service_role'"
-
-  - name: devices
-    columns:
-      - name: id
-        type: uuid
-        is_nullable: false
-        default: gen_random_uuid()
-        is_primary_key: true
-      - name: device_name
-        type: text
-        is_nullable: false
-      - name: store_id
-        type: uuid
-        is_nullable: false
-      - name: last_activity
-        type: timestamp with time zone
-        is_nullable: false
-        default: now()
-      - name: status
-        type: text
-        is_nullable: false
-        default: "'active'"
-    rls_enabled: true
-    policies:
-      - name: "Allow authenticated users read/write access to devices"
-        operation: ALL
-        using: "role() = 'authenticated'"
-      - name: "Allow service role full access to devices"
-        operation: ALL
-        using: "role() = 'service_role'"
-
-  - name: transactions
-    columns:
-      - name: id
-        type: uuid
-        is_nullable: false
-        default: gen_random_uuid()
-        is_primary_key: true
-      - name: transaction_date
-        type: timestamp with time zone
-        is_nullable: false
-        default: now()
-      - name: customer_id
-        type: uuid
-        is_nullable: false
-      - name: store_id
-        type: uuid
-        is_nullable: false
-      - name: total_amount
-        type: numeric
-        is_nullable: false
-      - name: payment_method
-        type: text
-        is_nullable: true
-    rls_enabled: true
-    policies:
-      - name: "Allow authenticated users read/write access to transactions"
-        operation: ALL
-        using: "role() = 'authenticated'"
-      - name: "Allow service role full access to transactions"
-        operation: ALL
-        using: "role() = 'service_role'"
-
-  - name: transaction_items
-    columns:
-      - name: id
-        type: uuid
-        is_nullable: false
-        default: gen_random_uuid()
-        is_primary_key: true
-      - name: transaction_id
-        type: uuid
-        is_nullable: false
-      - name: product_id
-        type: uuid
-        is_nullable: false
-      - name: quantity
-        type: integer
-        is_nullable: false
-      - name: unit_price
-        type: numeric
-        is_nullable: false
-      - name: total_price
-        type: numeric
-        is_nullable: false
-    rls_enabled: true
-    policies:
-      - name: "Allow authenticated users read/write access to transaction items"
-        operation: ALL
-        using: "role() = 'authenticated'"
-      - name: "Allow service role full access to transaction items"
-        operation: ALL
-        using: "role() = 'service_role'"
-
-views:
-  - name: daily_sales
-    definition: "SELECT date_trunc('day', transaction_date) AS sale_date, SUM(total_amount) AS daily_revenue FROM transactions GROUP BY 1 ORDER BY 1"
-    rls_enabled: true
-    policies:
-      - name: "read_daily_sales_analyst_admin"
-        operation: SELECT
-        using: "role() IN ('analyst', 'admin')"
-  
-  - name: product_performance
-    definition: "SELECT p.name AS product_name, b.name AS brand_name, SUM(ti.quantity) AS total_quantity_sold, SUM(ti.total_price) AS total_revenue FROM transaction_items ti JOIN products p ON ti.product_id = p.id JOIN brands b ON p.brand_id = b.id GROUP BY p.name, b.name ORDER BY total_revenue DESC"
-    rls_enabled: true
-    policies:
-      - name: "read_product_performance_analyst_admin"
-        operation: SELECT
-        using: "role() IN ('analyst', 'admin')"
-
-  - name: transactions_fmcg
-    definition: "SELECT * FROM transactions" # Placeholder, actual definition would be complex
-    rls_enabled: true
-    policies:
-      - name: "Allow authenticated users read/write access to transactions_fmcg"
-        operation: ALL
-        using: "role() = 'authenticated'"
-      - name: "Allow service role full access to transactions_fmcg"
-        operation: ALL
-        using: "role() = 'service_role'"
-
-  - name: transaction_items_fmcg
-    definition: "SELECT * FROM transaction_items" # Placeholder, actual definition would be complex
-    rls_enabled: true
-    policies:
-      - name: "Allow authenticated users read/write access to transaction_items_fmcg"
-        operation: ALL
-        using: "role() = 'authenticated'"
-      - name: "Allow service role full access to transaction_items_fmcg"
-        operation: ALL
-        using: "role() = 'service_role'"
-
-functions:
-  - name: get_age_distribution_simple
-    parameters: []
-    returns: "jsonb"
-    language: "plpgsql"
-    security: "definer"
-    definition: |
-      -- Placeholder for actual function logic
-      SELECT jsonb_build_object('message', 'Function get_age_distribution_simple not implemented in detail in YAML spec');
-  
-  - name: get_gender_distribution_simple
-    parameters: []
-    returns: "jsonb"
-    language: "plpgsql"
-    security: "definer"
-    definition: |
-      -- Placeholder for actual function logic
-      SELECT jsonb_build_object('message', 'Function get_gender_distribution_simple not implemented in detail in YAML spec');
-
-  - name: get_top_products
-    parameters: []
-    returns: "jsonb"
-    language: "plpgsql"
-    security: "definer"
-    definition: |
-      -- Placeholder for actual function logic
-      SELECT jsonb_build_object('message', 'Function get_top_products not implemented in detail in YAML spec');
-
-  - name: get_income_distribution
-    parameters: []
-    returns: "jsonb"
-    language: "plpgsql"
-    security: "definer"
-    definition: |
-      -- Placeholder for actual function logic
-      SELECT jsonb_build_object('message', 'Function get_income_distribution not implemented in detail in YAML spec');
-
-  - name: supabase_catalog_dump
-    parameters: []
-    returns: "jsonb"
-    language: "plpgsql"
-    security: "definer"
-    definition: |
-      -- This function's actual definition is in a migration file,
-      -- This YAML only defines its signature for auditing purposes.
-      DECLARE
-          result jsonb;
-      BEGIN
-          WITH roles AS (
-              SELECT array_agg(rolname) as roles
-              FROM pg_roles
-              WHERE rolname NOT LIKE 'pg_%'
-          ),
-          tables AS (
-              SELECT jsonb_agg(
-                  jsonb_build_object(
-                      'name', t.table_name,
-                      'columns', (
-                          SELECT jsonb_agg(
-                              jsonb_build_object(
-                                  'name', c.column_name,
-                                  'type', c.data_type,
-                                  'is_nullable', c.is_nullable = 'YES',
-                                  'default', c.column_default,
-                                  'is_primary_key', EXISTS (
-                                      SELECT 1
-                                      FROM information_schema.table_constraints tc
-                                      JOIN information_schema.constraint_column_usage ccu
-                                          ON tc.constraint_name = ccu.constraint_name
-                                      WHERE tc.constraint_type = 'PRIMARY KEY'
-                                          AND tc.table_name = t.table_name
-                                          AND ccu.column_name = c.column_name
-                                  )
-                              )
-                          )
-                          FROM information_schema.columns c
-                          WHERE c.table_name = t.table_name
-                          AND c.table_schema = 'public'
-                      ),
-                      'rls_enabled', EXISTS (
-                          SELECT 1
-                          FROM pg_tables
-                          WHERE tablename = t.table_name
-                          AND rowsecurity = true
-                      ),
-                      'policies', (
-                          SELECT jsonb_agg(
-                              jsonb_build_object(
-                                  'name', p.policyname,
-                                  'operation', p.cmd,
-                                  'using', p.qual,
-                                  'with_check', p.with_check
-                              )
-                          )
-                          FROM pg_policies p
-                          WHERE p.tablename = t.table_name
-                          AND p.schemaname = 'public'
-                      )
-                  )
-              ) as tables
-              FROM information_schema.tables t
-              WHERE t.table_schema = 'public'
-              AND t.table_type = 'BASE TABLE'
-          ),
-          views AS (
-              SELECT jsonb_agg(
-                  jsonb_build_object(
-                      'name', v.viewname,
-                      'definition', v.definition,
-                      'rls_enabled', EXISTS (
-                          SELECT 1
-                          FROM pg_views
-                          WHERE viewname = v.viewname
-                          AND schemaname = 'public'
-                      ),
-                      'policies', (
-                          SELECT jsonb_agg(
-                              jsonb_build_object(
-                                  'name', p.policyname,
-                                  'operation', p.cmd,
-                                  'using', p.qual,
-                                  'with_check', p.with_check
-                              )
-                          )
-                          FROM pg_policies p
-                          WHERE p.tablename = v.viewname
-                          AND p.schemaname = 'public'
-                      )
-                  )
-              ) as views
-              FROM pg_views v
-              WHERE v.schemaname = 'public'
-          ),
-          functions AS (
-              SELECT jsonb_agg(
-                  jsonb_build_object(
-                      'name', p.proname,
-                      'parameters', (
-                          SELECT jsonb_agg(
-                              jsonb_build_object(
-                                  'name', pa.parameter_name,
-                                  'type', pa.data_type,
-                                  'default', pa.parameter_default
-                              )
-                          )
-                          FROM information_schema.parameters pa
-                          WHERE pa.specific_name = p.proname
-                      ),
-                      'returns', pg_get_function_result(p.oid),
-                      'language', p.prolang::regproc::text,
-                      'security', CASE WHEN p.prosecdef THEN 'definer' ELSE 'invoker' END
-                  )
-              ) as functions
-              FROM pg_proc p
-              JOIN pg_namespace n ON p.pronamespace = n.oid
-              WHERE n.nspname = 'public'
-          )
-          SELECT jsonb_build_object(
-              'roles', (SELECT roles FROM roles),
-              'tables', (SELECT tables FROM tables),
-              'views', (SELECT views FROM views),
-              'functions', (SELECT functions FROM functions)
-          ) INTO result;
-
-          RETURN result;
-      END;
+# -----------------------------------------------------------
+# DISASTER RECOVERY CONFIG
+# -----------------------------------------------------------
+recovery:
+  adls_replication:
+    target_region: eastus
+    frequency: 15m
+  postgres_backup:
+    frequency: hourly
+    retention: 14d
+    adls_target: "backups/postgres"

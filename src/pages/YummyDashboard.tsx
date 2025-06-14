@@ -1,12 +1,6 @@
 import React from 'react';
-import { YummyDashboard } from '../components/yummy/YummyDashboard';
 
-const YummyDashboardPage: React.FC = () => {
-  return (
-    <div className="space-y-6">
-      <YummyDashboard />
-    </div>
-  );
-};
-
-export default YummyDashboardPage;
+// This page is now obsolete and removed from routing.
+export default function YummyDashboardPage() {
+  return null;
+}
