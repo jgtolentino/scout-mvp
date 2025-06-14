@@ -1,8 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { RetailBot } from '../components/RetailBot';
+import { EnhancedRetailBot } from '../components/chat/EnhancedRetailBot';
 import { Bot, Sparkles, TrendingUp, MessageSquare } from 'lucide-react';
 
 const Chat: React.FC = () => {
+  const [useEnhanced, setUseEnhanced] = useState(true);
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -12,12 +15,26 @@ const Chat: React.FC = () => {
             <Bot className="w-8 h-8 text-white" />
           </div>
         </div>
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">
-          Scout AI Retail Assistant
-        </h1>
+        <div className="flex items-center justify-center space-x-4 mb-4">
+          <h1 className="text-3xl font-bold text-gray-900">
+            Scout AI Retail Assistant
+          </h1>
+          <button
+            onClick={() => setUseEnhanced(!useEnhanced)}
+            className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+              useEnhanced 
+                ? 'bg-purple-600 text-white shadow-lg transform scale-105' 
+                : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
+            }`}
+          >
+            {useEnhanced ? '🚀 Enhanced AI' : '📊 Standard Mode'}
+          </button>
+        </div>
         <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-          Your intelligent companion for Philippine FMCG market analysis. 
-          Ask questions about revenue, brands, regions, and get instant insights.
+          {useEnhanced 
+            ? 'Advanced AI platform for Philippine FMCG intelligence with predictive analytics and strategic insights.'
+            : 'Your intelligent companion for Philippine FMCG market analysis. Ask questions about revenue, brands, regions, and get instant insights.'
+          }
         </p>
       </div>
 
@@ -62,7 +79,11 @@ const Chat: React.FC = () => {
 
       {/* Chat Interface */}
       <div className="bg-white rounded-lg shadow-lg">
-        <RetailBot className="h-[600px]" />
+        {useEnhanced ? (
+          <EnhancedRetailBot className="h-[600px]" />
+        ) : (
+          <RetailBot className="h-[600px]" />
+        )}
       </div>
 
       {/* Usage Tips */}
