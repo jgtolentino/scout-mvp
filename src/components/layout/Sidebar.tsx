@@ -8,7 +8,8 @@ import {
   ChevronRight,
   BarChart3,
   RefreshCw,
-  MessageCircle
+  MessageCircle,
+  Database
 } from 'lucide-react';
 import { useFilterStore } from '../../store/useFilterStore';
 
@@ -22,6 +23,7 @@ const Sidebar: React.FC = () => {
     { name: 'Transaction Trends', href: '/trends', icon: TrendingUp, description: 'Temporal analysis' },
     { name: 'Product Mix', href: '/products', icon: Package, description: 'Category performance' },
     { name: 'Consumer Insights', href: '/consumers', icon: Users, description: 'Demographics' },
+    { name: 'All Transactions', href: '/transactions', icon: Database, description: 'Complete records (5K)' },
     { name: 'Chat', href: '/chat', icon: MessageCircle, description: 'Scout AI Assistant' },
   ];
 

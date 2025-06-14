@@ -8,6 +8,7 @@ import TransactionTrends from './pages/TransactionTrends';
 import ProductMix from './pages/ProductMix';
 import ConsumerInsights from './pages/ConsumerInsights';
 import Chat from './pages/Chat';
+import AllTransactions from './pages/AllTransactions';
 import ChatLauncher from './components/chat/ChatLauncher';
 
 function App() {
@@ -39,6 +40,7 @@ function App() {
             <Route path="/trends" element={<TransactionTrends />} />
             <Route path="/products" element={<ProductMix />} />
             <Route path="/consumers" element={<ConsumerInsights />} />
+            <Route path="/transactions" element={<AllTransactions />} />
             <Route path="/chat" element={<Chat />} />
           </Routes>
         </main>
