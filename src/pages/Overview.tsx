@@ -1,5 +1,5 @@
-import React from 'react';
-import { DollarSign, ShoppingCart, TrendingUp, Star } from 'lucide-react';
+import React, { useState } from 'react';
+import { DollarSign, ShoppingCart, TrendingUp, Star, ChevronDown, ChevronUp } from 'lucide-react';
 /*
  * 🔄 14-Jun-2025 Hot-fix
  * The page was wired to the outdated `useSupabaseData` hook that still relies on the broken
@@ -14,6 +14,7 @@ import DonutChart from '../components/charts/DonutChart';
 import LineChart from '../components/charts/LineChart';
 import AIInsightsPanel from '../components/insights/AIInsightsPanel';
 import ErrorState from '../components/ui/ErrorState';
+import QADashboard from '../components/audit/QADashboard';
 import { useNavigate } from 'react-router-dom';
 import { useFilterStore } from '../store/useFilterStore';
 import { ChartData } from '../types';
@@ -29,6 +30,7 @@ const Overview: React.FC = () => {
   
   const navigate = useNavigate();
   const { setCategories } = useFilterStore();
+  const [showQADashboard, setShowQADashboard] = useState(false);
 
   const handleCategoryClick = (category: ChartData) => {
     setCategories([category.name]);
@@ -144,6 +146,32 @@ const Overview: React.FC = () => {
         <div>
           <AIInsightsPanel />
         </div>
+      </div>
+
+      {/* Data Quality & Audit Section */}
+      <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
+        <div 
+          className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors"
+          onClick={() => setShowQADashboard(!showQADashboard)}
+        >
+          <div className="flex items-center space-x-2">
+            <TrendingUp className="h-5 w-5 text-blue-600" />
+            <h3 className="text-lg font-semibold text-gray-900">Data Quality & KPI Validation</h3>
+            <span className="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded-full font-medium">
+              Live Audit
+            </span>
+          </div>
+          {showQADashboard ? 
+            <ChevronUp className="h-5 w-5 text-gray-400" /> : 
+            <ChevronDown className="h-5 w-5 text-gray-400" />
+          }
+        </div>
+        
+        {showQADashboard && (
+          <div className="border-t border-gray-200 p-6">
+            <QADashboard />
+          </div>
+        )}
       </div>
 
       {/* Category Performance */}
