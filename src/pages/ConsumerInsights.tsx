@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Users, UserCheck, DollarSign, ShoppingBag } from 'lucide-react';
 import { useSupabaseData } from '../hooks/useSupabaseData';
 import ChartCard from '../components/ui/ChartCard';
 import DonutChart from '../components/charts/DonutChart';
 import BarChart from '../components/charts/BarChart';
+import { supabase } from '../lib/supabase';
 
 const ConsumerInsights: React.FC = () => {
   const { 
@@ -13,6 +14,29 @@ const ConsumerInsights: React.FC = () => {
     genderDistribution,
     dashboardData 
   } = useSupabaseData();
+
+  const [incomeData, setIncomeData] = useState<ChartData[]>([]);
+
+  useEffect(() => {
+    const fetchIncomeData = async () => {
+      try {
+        const { data, error } = await supabase
+          .rpc('get_income_distribution');
+        
+        if (error) throw error;
+        
+        setIncomeData(data?.map(item => ({
+          name: item.income_bracket,
+          value: item.total_revenue || 0
+        })) || []);
+      } catch (error) {
+        console.error('Error fetching income data:', error);
+        setIncomeData([]);
+      }
+    };
+
+    fetchIncomeData();
+  }, []);
 
   if (loading) {
     return (
@@ -59,24 +83,14 @@ const ConsumerInsights: React.FC = () => {
   const genderData = genderDistribution.length > 0 ? genderDistribution.map(item => ({
     name: item.gender === 'M' ? 'Male' : 'Female',
     value: item.total_revenue || item.value || 0
-  })) : [
-    { name: 'Female', value: 425000 },
-    { name: 'Male', value: 290000 },
-  ];
-
-  // Mock income data
-  const incomeData = [
-    { name: 'High', value: 285000 },
-    { name: 'Medium', value: 245000 },
-    { name: 'Low', value: 185000 },
-  ];
+  })) : [];
 
   // Customer behavior metrics
   const customerMetrics = {
-    totalCustomers: dashboardData?.unique_customers || 2847,
-    avgTransactionsPerCustomer: dashboardData?.avg_transactions_per_customer || 6.3,
-    avgSpendPerCustomer: dashboardData?.avg_spend_per_customer || 251.45,
-    repeatCustomerRate: dashboardData?.repeat_customer_rate || 0.68,
+    totalCustomers: dashboardData?.unique_customers || 0,
+    avgTransactionsPerCustomer: dashboardData?.avg_transactions_per_customer || 0,
+    avgSpendPerCustomer: dashboardData?.avg_spend_per_customer || 0,
+    repeatCustomerRate: dashboardData?.repeat_customer_rate || 0,
   };
 
   return (

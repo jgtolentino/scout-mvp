@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Package, Star, TrendingUp, AlertCircle } from 'lucide-react';
 import { useSupabaseData } from '../hooks/useSupabaseData';
 import ChartCard from '../components/ui/ChartCard';
@@ -6,6 +6,7 @@ import DonutChart from '../components/charts/DonutChart';
 import BarChart from '../components/charts/BarChart';
 import { useFilterStore } from '../store/useFilterStore';
 import { ChartData } from '../types';
+import { supabase } from '../lib/supabase';
 
 const ProductMix: React.FC = () => {
   const { 
@@ -16,6 +17,32 @@ const ProductMix: React.FC = () => {
   } = useSupabaseData();
   
   const { setBrands, setCategories } = useFilterStore();
+
+  const [productData, setProductData] = useState<ChartData[]>([]);
+
+  useEffect(() => {
+    const fetchProductData = async () => {
+      try {
+        const { data, error } = await supabase
+          .rpc('get_top_products', {
+            p_limit: 8
+          });
+        
+        if (error) throw error;
+        
+        setProductData(data?.map(item => ({
+          name: item.product_name,
+          value: item.total_revenue || 0,
+          quantity: item.total_quantity || 0
+        })) || []);
+      } catch (error) {
+        console.error('Error fetching product data:', error);
+        setProductData([]);
+      }
+    };
+
+    fetchProductData();
+  }, []);
 
   if (loading) {
     return (
@@ -58,18 +85,6 @@ const ProductMix: React.FC = () => {
     value: item.total_revenue || item.value || 0,
     change: item.growth_rate || 0
   })).slice(0, 8);
-
-  // Mock product data since we don't have individual product breakdown yet
-  const productData = [
-    { name: 'Nescafé Original', value: 125000, quantity: 450 },
-    { name: 'Coca-Cola Classic', value: 98000, quantity: 380 },
-    { name: 'Lucky Me! Instant Noodles', value: 87000, quantity: 520 },
-    { name: 'Dove Soap', value: 76000, quantity: 290 },
-    { name: 'Tide Detergent', value: 65000, quantity: 180 },
-    { name: 'Head & Shoulders', value: 54000, quantity: 160 },
-    { name: 'Del Monte Corned Beef', value: 48000, quantity: 140 },
-    { name: 'Colgate Toothpaste', value: 42000, quantity: 210 },
-  ];
 
   const handleCategoryClick = (category: ChartData) => {
     setCategories([category.name]);

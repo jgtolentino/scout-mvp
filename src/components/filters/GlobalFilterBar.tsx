@@ -1,11 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Calendar, MapPin, Package, Tag, Store, Filter, X } from 'lucide-react';
 import { useFilterStore } from '../../store/useFilterStore';
-import { mockStores, mockProducts, mockBrands } from '../../data/mockData';
 import { format } from 'date-fns';
+import { supabase } from '../../lib/supabase';
 
 const GlobalFilterBar: React.FC = () => {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [uniqueBarangays, setUniqueBarangays] = useState<string[]>([]);
+  const [uniqueCategories, setUniqueCategories] = useState<string[]>([]);
+  const [uniqueBrands, setUniqueBrands] = useState<string[]>([]);
+  const [uniqueStores, setUniqueStores] = useState<string[]>([]);
   const {
     dateRange,
     barangays,
@@ -22,10 +26,42 @@ const GlobalFilterBar: React.FC = () => {
   } = useFilterStore();
 
   const activeFilters = getActiveFilterCount();
-  const uniqueBarangays = Array.from(new Set(mockStores.map(s => s.barangay)));
-  const uniqueCategories = Array.from(new Set(mockProducts.map(p => p.category)));
-  const uniqueBrands = Array.from(new Set(mockBrands.map(b => b.name)));
-  const uniqueStores = Array.from(new Set(mockStores.map(s => s.name)));
+
+  useEffect(() => {
+    const fetchFilterOptions = async () => {
+      try {
+        // Fetch unique barangays
+        const { data: barangayData } = await supabase
+          .from('stores')
+          .select('barangay');
+        const uniqueBarangayList = [...new Set(barangayData?.map(b => b.barangay) || [])];
+        setUniqueBarangays(uniqueBarangayList);
+
+        // Fetch unique categories
+        const { data: categoryData } = await supabase
+          .from('products')
+          .select('category');
+        const uniqueCategoryList = [...new Set(categoryData?.map(c => c.category) || [])];
+        setUniqueCategories(uniqueCategoryList);
+
+        // Fetch unique brands
+        const { data: brandData } = await supabase
+          .from('brands')
+          .select('name');
+        setUniqueBrands(brandData?.map(b => b.name) || []);
+
+        // Fetch unique stores
+        const { data: storeData } = await supabase
+          .from('stores')
+          .select('name');
+        setUniqueStores(storeData?.map(s => s.name) || []);
+      } catch (error) {
+        console.error('Error fetching filter options:', error);
+      }
+    };
+
+    fetchFilterOptions();
+  }, []);
 
   const handleMultiSelect = (
     value: string,

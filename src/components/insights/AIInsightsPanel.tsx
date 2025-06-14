@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Brain, Lightbulb, AlertTriangle, TrendingUp, RefreshCw } from 'lucide-react';
 import { AIInsight } from '../../types';
-import { mockAIInsights } from '../../data/mockData';
 import { useFilterStore } from '../../store/useFilterStore';
+import { supabase } from '../../lib/supabase';
 
 const AIInsightsPanel: React.FC = () => {
   const [insights, setInsights] = useState<AIInsight[]>([]);
@@ -11,16 +11,22 @@ const AIInsightsPanel: React.FC = () => {
 
   const loadInsights = async () => {
     setLoading(true);
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Filter insights based on confidence and active filters
-    const filteredInsights = mockAIInsights
-      .filter(insight => insight.confidence >= 0.7)
-      .slice(0, 3);
-    
-    setInsights(filteredInsights);
-    setLoading(false);
+    try {
+      const { data, error } = await supabase
+        .rpc('get_ai_insights', {
+          p_confidence_threshold: 0.7,
+          p_limit: 3
+        });
+
+      if (error) throw error;
+
+      setInsights(data || []);
+    } catch (error) {
+      console.error('Error loading insights:', error);
+      setInsights([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
