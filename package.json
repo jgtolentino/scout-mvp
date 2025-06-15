@@ -25,6 +25,7 @@
   },
   "dependencies": {
     "@azure/openai": "^2.0.0",
+    "@headlessui/react": "^2.2.4",
     "@supabase/supabase-js": "^2.39.3",
     "@types/js-yaml": "^4.0.9",
     "clsx": "^2.1.0",
