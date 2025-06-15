@@ -10,6 +10,8 @@ import PromoCompetition from './pages/PromoCompetition';
 import ScoutAI from './pages/Chat';
 import PersistentChatWidget from './components/chat/PersistentChatWidget';
 import LearnBotModal from './components/LearnBotModal';
+// SnowWhite Sanitized Components
+import { ClientSanitizer } from './utils/client-sanitizer';
 
 function shouldShowLearnBot() {
   return localStorage.getItem('learnbot_seen') !== 'true';
@@ -20,6 +22,11 @@ function App() {
   const location = useLocation();
   const navigate = useNavigate();
   const [learnBotOpen, setLearnBotOpen] = useState(false);
+
+  // Initialize SnowWhite client sanitization
+  useEffect(() => {
+    ClientSanitizer.initializeClientMode();
+  }, []);
 
   // Demo: Deliberate console error for testing auto-issue workflow
   useEffect(() => {
