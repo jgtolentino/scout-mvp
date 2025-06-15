@@ -45,6 +45,6 @@ dashboard:
     - supabase
     - adls2
   deployment:
-    environment: production
+    environment: preview
     vercel_project: ai-agency
     preview_to_prod: enabled
