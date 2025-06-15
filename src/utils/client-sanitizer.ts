@@ -313,12 +313,12 @@ class ClientSanitizer {
       document.head.appendChild(link);
       
       // Set client title
-      document.title = 'Retail Intelligence Dashboard';
+      document.title = 'Scout Analytics Dashboard - TBWA AI Platform';
       
       // Update meta tags
       const metaDescription = document.querySelector('meta[name="description"]');
       if (metaDescription) {
-        metaDescription.setAttribute('content', 'Advanced retail analytics and insights platform');
+        metaDescription.setAttribute('content', 'AI-powered retail intelligence platform for the Philippines market');
       }
     }
   }

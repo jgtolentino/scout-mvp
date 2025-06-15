@@ -4,8 +4,9 @@
   "description": "AI-powered retail analytics dashboard for TBWA Philippines",
   "type": "module",
   "scripts": {
-    "build": "tsc -b && vite build",
     "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
     "setup": "./scripts/setup.sh",
     "sync": "./scripts/sync_agents.sh",
     "deploy": "./scripts/deploy_agents.sh",
