@@ -13,53 +13,21 @@ import type {
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
-// Use demo/mock values if environment variables are not set
-const defaultUrl = 'https://demo.supabase.co'
-const defaultKey = 'demo_key'
-
 if (!supabaseUrl || !supabaseAnonKey) {
-  console.info('🎭 Demo mode: Using mock data for Scout Analytics dashboard');
+  throw new Error('Missing Supabase environment variables')
 }
 
-export const supabase = createClient(
-  supabaseUrl || defaultUrl, 
-  supabaseAnonKey || defaultKey
-)
+export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
-// Database function calls with mock fallback
+// Database function calls with error handling
 export const getDashboardSummary = async (filters: Record<string, string | string[]> = {}): Promise<DashboardSummary> => {
   try {
-    if (!supabaseUrl || !supabaseAnonKey) {
-      return {
-        totalRevenue: 12850000,
-        totalOrders: 8524,
-        averageOrderValue: 1508,
-        conversionRate: 3.2,
-        periodChange: {
-          revenue: 12.5,
-          orders: 8.2,
-          aov: 4.1,
-          conversion: -0.3
-        }
-      }
-    }
     const { data, error } = await supabase.rpc('get_dashboard_summary', { filters })
     if (error) throw error
     return data
   } catch (error) {
     console.error('getDashboardSummary error:', error)
-    return {
-      totalRevenue: 12850000,
-      totalOrders: 8524,
-      averageOrderValue: 1508,
-      conversionRate: 3.2,
-      periodChange: {
-        revenue: 12.5,
-        orders: 8.2,
-        aov: 4.1,
-        conversion: -0.3
-      }
-    }
+    throw error
   }
 }
 
