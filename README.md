@@ -1,217 +1,429 @@
-# Scout Analytics MVP
+# 🤖 AI Agency Canonical Runtime
 
-> Retail intelligence dashboard for the Philippine market
+[![Production Ready](https://img.shields.io/badge/Status-Production%20Ready-green)]()
+[![Version](https://img.shields.io/badge/Version-2.1.0-blue)]()
+[![Agents](https://img.shields.io/badge/Agents-6%20Configured-orange)]()
+[![AI Stack](https://img.shields.io/badge/AI%20Stack-Complete-purple)]()
 
-A production-ready analytics dashboard built with React, TypeScript, and Supabase, featuring real-time insights, demographic analytics, and AI-powered recommendations.
+## 🎯 **Retail Intelligence Dashboard - AI-Powered Analytics Platform**
 
-## ✨ Features
+The **Retail Intelligence Dashboard** provides comprehensive analytics and insights for retail and FMCG businesses with advanced AI assistance, data validation, and quality assurance capabilities.
 
-- 📊 **Executive Dashboard** - Real-time KPIs and performance metrics
-- 📈 **Transaction Trends** - Temporal and regional analysis  
-- 🛍️ **Product Mix Analysis** - Category and brand performance
-- 👥 **Consumer Insights** - Demographics and behavioral patterns
-- 🤖 **AI-Powered Insights** - Azure OpenAI integration
-- 🎯 **Advanced Filtering** - Multi-dimensional data filtering
-- 📱 **Responsive Design** - Optimized for all devices
+### 🚀 **Key Features**
 
-## 🚀 Quick Start
+- **📊 Advanced Analytics** → Comprehensive retail performance insights
+- **💬 AI Learning Assistant** → Interactive help with contextual guidance
+- **✅ Data Validation** → AI-powered quality assurance for insights
+- **🎯 Quality Assurance** → Real-time validation and recommendations
+- **💾 Secure Storage** → Encrypted data management and persistence
+- **🔄 Easy Integration** → Modular architecture for seamless deployment
+- **⚡ Automated Workflows** → Streamlined operations and reporting
+- **🔒 Enterprise Security** → Advanced security and access controls
 
-### 🏃‍♂️ Run the interactive demo (no database required)
+---
+
+## 📁 **Repository Structure**
 
 ```bash
-git clone https://github.com/jgtolentino/scout-mvp.git
-cd scout-mvp
+ai-agency-canonical/
+├── agents/                    # 🤖 Agent Configurations
+│   ├── scout/                # Scout Analytics Platform
+│   │   ├── learnbot.yaml     # Tutorial & onboarding v2.1
+│   │   ├── retailbot.yaml    # FMCG analytics v3.0
+│   │   ├── vibe-testbot.yaml # AI code QA v1.2
+│   │   └── scout-ai-combo.yaml # Unified orchestration
+│   ├── ces/                  # CES Campaign Intelligence
+│   │   └── cesai.yaml        # Campaign analysis specialist
+│   ├── shared/               # Cross-platform utilities
+│   │   └── context-manager.yaml # Memory management
+│   └── VibeTestBot.ts        # 🎯 Dev runtime QA agent
+├── components/               # ⚛️ React Components
+│   ├── LearnBotTooltip.tsx   # 🧠 RAG-powered learning assistant
+│   └── InsightCard.tsx       # ✅ RetailBot validation component
+├── utils/                    # 🛠️ Core Utilities
+│   ├── learnbot.ts          # 📚 RAG system implementation
+│   ├── retailbot.ts         # 🔍 Insight validation engine
+│   └── memory.ts            # 💾 Supabase memory management
+├── config/                   # ⚙️ Configuration
+│   └── dashboard.yaml       # 🎛️ Full AI interaction stack config
+├── prompts/                  # 📝 System Prompts
+├── orchestration/           # 🔄 Multi-agent Workflows
+├── cli/                     # ⚡ Pulser CLI Utilities
+├── scripts/                 # 🚀 Deployment Automation
+│   ├── sync_agents.sh       # Sync with canonical repo
+│   ├── deploy_agents.sh     # Production deployment
+│   └── setup.sh             # Environment initialization
+├── .pulserrc                # ⚙️ Runtime Configuration
+├── .pulser_memory.json      # 🧠 Persistent Memory
+├── agent_manifest.yaml     # 📋 Central Registry
+├── package.json             # 📦 Dependencies
+├── tsconfig.json            # 🔧 TypeScript config
+└── README.md               # 📖 Documentation
+```
+
+---
+
+## 🔧 **Quick Start**
+
+### 1. **Initialize Environment**
+```bash
+git clone https://github.com/jgtolentino/ai-agency.git
+cd ai-agency
 npm install
-cp .env.example .env
-echo "VITE_SCOUT_DEMO=on" >> .env
-npm run dev          # Opens http://localhost:5173 (all data in memory)
+./scripts/setup.sh
 ```
 
-*No Supabase keys required. Includes 5,000 realistic FMCG transactions.*
+### 2. **Configure Supabase (Optional)**
+```bash
+# Set environment variables for persistent memory
+export NEXT_PUBLIC_SUPABASE_URL="your_supabase_url"
+export NEXT_PUBLIC_SUPABASE_ANON_KEY="your_supabase_key"
+export MEMORY_ENCRYPTION_KEY="your_encryption_key"
+```
 
-### 🔧 Full production setup
+### 3. **Load CLI Commands**
+```bash
+source cli/pulser_commands.sh
+pulser_status  # Check agent availability
+```
+
+### 4. **Test AI Interaction Stack**
+```bash
+# Load Scout Analytics full combo with AI stack
+pulser load scout/scout-ai-combo.yaml
+
+# Test components
+npm run dev  # Start development server
+npm run build  # Build components
+npm run typecheck  # Verify TypeScript
+```
+
+---
+
+## 🤖 **AI Interaction Stack Components**
+
+### **🧠 LearnBot with RAG**
+```typescript
+import { LearnBotTooltip } from './components/LearnBotTooltip';
+
+<LearnBotTooltip 
+  trigger={<button>Help</button>}
+  context="dashboard-overview"
+  userAction="viewing-metrics"
+/>
+```
+
+**Features:**
+- ✅ RAG-powered contextual tips
+- ✅ Persistent chat memory with Supabase
+- ✅ Real-time conversation mode
+- ✅ Knowledge base integration
+- ✅ Confidence scoring
+
+### **✅ RetailBot Insight Validation**
+```typescript
+import { InsightCard } from './components/InsightCard';
+
+<InsightCard
+  title="Monthly Revenue"
+  data={{ value: 125000, change: 12.5, unit: "$" }}
+  type="metric"
+  enableRetailBotValidation={true}
+/>
+```
+
+**Features:**
+- ✅ AI-powered data quality checks
+- ✅ Business logic validation
+- ✅ Confidence scoring
+- ✅ Alternative view suggestions
+- ✅ Real-time insight analysis
+
+### **🎯 Vibe TestBot Development QA**
+```typescript
+import { createVibeTestBot } from './agents/VibeTestBot';
+
+const vibeBot = createVibeTestBot({
+  mode: 'vibe',
+  enableRealTime: true,
+  tikTokMode: true
+});
+
+await vibeBot.startSession('dev');
+const issues = await vibeBot.analyzeCode(code, 'component.tsx');
+```
+
+**Features:**
+- ✅ Real-time code analysis
+- ✅ TikTok-style feedback
+- ✅ Performance monitoring
+- ✅ Fix suggestions
+- ✅ Vibe scoring system
+
+### **💾 Supabase Memory Integration**
+```typescript
+import { logChatMessage, getMemory } from './utils/memory';
+
+// Log chat interactions
+await logChatMessage('learnbot', 'user', 'How do I filter data?', {
+  sessionId: 'session-123',
+  context: 'dashboard-filters'
+});
+
+// Retrieve persistent memory
+const memory = await getMemory('user-preferences');
+```
+
+**Features:**
+- ✅ Encrypted memory storage
+- ✅ Chat session logging
+- ✅ Cross-agent memory sharing
+- ✅ Automatic cleanup
+- ✅ Performance analytics
+
+---
+
+## 🔗 **Integration Pattern**
+
+### **Add to Existing Projects**
+
+For any project (e.g., scout-mvp, ces-platform):
 
 ```bash
-git clone https://github.com/jgtolentino/scout-mvp.git
-cd scout-mvp
-npm install
-
-# Setup database (one command)
-export SUPABASE_DB_URL="postgres://postgres:YOUR_PASSWORD@db.YOUR_PROJECT_REF.supabase.co:5432/postgres"
-./fix_all.sh
-
-# Start development
-npm run dev
+cd ~/your-project-root
+git submodule add https://github.com/jgtolentino/ai-agency.git ai-agency
+git submodule update --init --recursive
 ```
 
-[📖 Full documentation](./docs/) | [🔧 Installation guide](./docs/quick-start.md)
+### **Configure AI Interaction Stack**
 
-## 🏗️ Tech Stack
+In your project's configuration:
+```yaml
+# .pulserrc
+cwd_lock: ai-agency
+agent_dir: ai-agency/agents
+memory_file: ai-agency/.pulser_memory.json
+platform: scout
 
-- **Frontend**: React 18, TypeScript, Tailwind CSS, Vite
-- **Charts**: Recharts with interactive visualizations
-- **State**: Zustand with URL persistence
-- **Database**: Supabase (PostgreSQL + RLS + Real-time)
-- **AI**: Azure OpenAI for insights generation
-- **Testing**: Vitest + Playwright + Testing Library
+# Enable AI interaction stack
+features:
+  learnbot_rag: true
+  retailbot_validation: true
+  vibe_testbot_qa: true
+  chat_memory: true
+```
 
-## Database Setup
+### **Import Components**
 
-### 1. Create a New Supabase Project
+```typescript
+// Import AI components
+import { LearnBotTooltip } from '../ai-agency/components/LearnBotTooltip';
+import { InsightCard } from '../ai-agency/components/InsightCard';
+import { createVibeTestBot } from '../ai-agency/agents/VibeTestBot';
 
-1. Go to [Supabase](https://supabase.com) and create a new project
-2. Wait for the project to be fully initialized
-3. Note your project URL and anon key
+// Import utilities
+import { logMemory, getChatHistory } from '../ai-agency/utils/memory';
+import { validateInsight } from '../ai-agency/utils/retailbot';
+import { fetchLearnBotTip } from '../ai-agency/utils/learnbot';
+```
 
-### 2. Run Database Migrations (Automated)
+---
 
-**Quick automated setup (recommended):**
+## 🎛️ **Dashboard Configuration**
+
+The complete AI interaction stack is configured via `config/dashboard.yaml`:
+
+```yaml
+dashboard_config:
+  ai_assistant:
+    enabled: true
+    floating_panel: true
+    agents:
+      learnbot:
+        rag_enabled: true
+        chat_memory: true
+      retailbot:
+        validation_enabled: true
+        auto_validate: true
+      vibe_testbot:
+        real_time_enabled: true
+        tiktok_style: true
+
+  memory:
+    provider: "supabase"
+    encryption_enabled: true
+    chat_logging: true
+
+  features:
+    learnbot_rag: true
+    retailbot_validation: true
+    vibe_testbot_qa: true
+    real_time_updates: true
+```
+
+---
+
+## 🛠️ **Development Commands**
 
 ```bash
-# Set your database URL
-export SUPABASE_DB_URL="postgres://postgres:YOUR_PASSWORD@db.YOUR_PROJECT_REF.supabase.co:5432/postgres"
+# Environment Management
+npm install                     # Install dependencies
+npm run setup                   # Initialize environment
+npm run sync                    # Sync with latest configurations
 
-# Run the automated fix
-./fix_all.sh
+# Development
+npm run dev                     # Start development mode
+npm run build                   # Build components
+npm run typecheck               # TypeScript validation
+npm run lint                    # Code quality check
+npm run test                    # Run tests
 
-# Verify everything worked
-./verify_fix.sh
+# Agent Operations
+pulser_status                   # Check agent status
+pulser_list                     # List available agents
+pulser load <agent_config>      # Load specific agent
+
+# Deployment
+npm run deploy                  # Deploy to production
+./scripts/deploy_agents.sh --env production --agents scout/scout-ai-combo
 ```
 
-This automatically:
-- ✅ Fixes function overloads
-- ✅ Adds demographic columns
-- ✅ Enables Row-Level Security
-- ✅ Populates 5000 transactions with data
+---
 
-**Manual setup (alternative):**
+## 📊 **AI Interaction Stack Features**
 
-If you prefer manual setup, see `MIGRATION_GUIDE.md` for SQL to run in Supabase SQL Editor.
+### ✅ **Complete Implementation**
+- [x] **LearnBot RAG System** → Knowledge retrieval with contextual memory
+- [x] **RetailBot Validation** → AI-powered insight card validation
+- [x] **Vibe TestBot QA** → Real-time development quality assurance
+- [x] **Supabase Memory** → Persistent chat logging and encryption
+- [x] **React Components** → Ready-to-use UI components
+- [x] **TypeScript Support** → Full type safety and intellisense
+- [x] **Configuration Management** → YAML-based dashboard config
+- [x] **Performance Monitoring** → Real-time metrics and analytics
 
-### 3. Configure Environment Variables
+### 🚀 **Better Than Databricks One**
+- **Advanced RAG Integration** → Context-aware knowledge retrieval
+- **Multi-Agent Orchestration** → Seamless agent coordination
+- **Real-Time QA** → Live code analysis and feedback
+- **Persistent Memory** → Cross-session context retention
+- **TikTok-Style UX** → Engaging developer experience
+- **Enterprise Security** → Encryption and access control
+- **Git Submodule Pattern** → Scalable integration architecture
 
-Create a `.env` file in the root directory:
+---
 
-```env
-VITE_SUPABASE_URL=your_supabase_project_url
-VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+## 🔒 **Security & Performance**
 
-# For AI Insights (optional)
-AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com/
-AZURE_OPENAI_API_KEY=your_azure_api_key
+### **Security Features**
+- **Memory Encryption** → AES encryption for sensitive data
+- **Access Control** → Role-based agent permissions
+- **Data Privacy** → GDPR-compliant memory management
+- **Rate Limiting** → API protection and abuse prevention
+- **Session Management** → Secure chat session handling
+
+### **Performance Optimizations**
+- **Lazy Loading** → Components load on demand
+- **Memory Cleanup** → Automatic memory management
+- **Caching Strategy** → Intelligent response caching
+- **Bundle Optimization** → Tree-shaking and code splitting
+- **Real-Time Updates** → Efficient WebSocket connections
+
+---
+
+## 📚 **API Reference**
+
+### **LearnBot RAG API**
+```typescript
+// Fetch contextual tips
+const tip = await fetchLearnBotTip('dashboard-filters', 'how to filter data');
+
+// Check knowledge availability
+const hasTips = hasLearnBotTips('analytics');
+
+// Get suggestions
+const suggestions = await getLearnBotSuggestions('chart', 'revenue-chart');
 ```
 
-## Local Development
+### **RetailBot Validation API**
+```typescript
+// Validate insight data
+const validation = await validateInsight(data, 'metric');
 
-1. Install dependencies:
-```bash
-npm install
+// Get recommendations
+const recommendations = await getInsightRecommendations('trend');
+
+// Check validation availability
+const available = isValidationAvailable('forecast');
 ```
 
-2. Start the development server:
-```bash
-npm run dev
+### **Vibe TestBot QA API**
+```typescript
+// Create QA bot
+const vibeBot = createVibeTestBot({ mode: 'vibe' });
+
+// Start session
+const sessionId = await vibeBot.startSession('dev');
+
+// Analyze code
+const issues = await vibeBot.analyzeCode(code, 'component.tsx');
+
+// Get session summary
+const summary = await vibeBot.getSessionSummary();
 ```
 
-3. Open [http://localhost:5173](http://localhost:5173) in your browser
+### **Memory Management API**
+```typescript
+// Store/retrieve memory
+await logMemory('user-state', { theme: 'dark' });
+const state = await getMemory('user-state');
 
-## Database Schema
+// Chat logging
+const messageId = await logChatMessage('learnbot', 'user', 'Hello');
+const history = await getChatHistory('session-123');
 
-### Core Tables
-
-- **brands**: Product brand information
-- **products**: Product catalog with categories and pricing
-- **stores**: Store locations and details
-- **customers**: Customer demographic information
-- **transactions**: Transaction records
-- **transaction_items**: Individual items within transactions
-
-### Analytics Functions
-
-- `get_dashboard_summary()`: Overall KPIs and metrics
-- `get_location_distribution()`: Store and location performance
-- `get_product_categories_summary()`: Category performance
-- `get_brand_performance()`: Brand analysis
-- `get_daily_trends()`: Daily revenue trends
-- `get_hourly_trends()`: Hourly transaction patterns
-- `get_age_distribution_simple()`: Customer age demographics
-- `get_gender_distribution_simple()`: Customer gender demographics
-
-## Features Overview
-
-### Dashboard Pages
-
-1. **Overview**: Executive summary with key metrics and AI insights
-2. **Transaction Trends**: Time-based analysis and regional performance
-3. **Product Mix**: Category and brand performance analysis
-4. **Consumer Insights**: Customer demographics and behavior
-
-### Filtering System
-
-- Date range selection
-- Location filtering (barangay)
-- Category filtering
-- Brand filtering
-- Store filtering
-- URL-based filter persistence
-
-### Data Visualization
-
-- Interactive charts with click-through navigation
-- Responsive design for mobile and desktop
-- Real-time data updates
-- Export capabilities
-
-## Sample Data
-
-The database includes realistic sample data for the Philippine retail market:
-
-- 10 major brands (Nestlé, Unilever, P&G, Coca-Cola, etc.)
-- 40+ products across categories (Food, Beverages, Personal Care, Home Care)
-- 4 stores in Makati barangays
-- 1,000 customers with demographic data
-- 5,000+ transactions with realistic patterns
-
-## Performance Considerations
-
-- Database indexes on frequently queried columns
-- Efficient SQL functions with proper filtering
-- Client-side caching with Zustand
-- Lazy loading and pagination where appropriate
-- Optimized chart rendering with Recharts
-
-## Security
-
-- Row Level Security (RLS) enabled on all tables
-- Public read access for analytics (appropriate for dashboard use)
-- Service role access for data management
-- Environment variable protection for sensitive keys
-
-## Deployment
-
-The application can be deployed to any static hosting service:
-
-1. Build the application:
-```bash
-npm run build
+// Session management
+const sessionId = await startChatSession('learnbot');
+await endChatSession(sessionId);
 ```
 
-2. Deploy the `dist` folder to your hosting service
+---
 
-Popular options:
-- Vercel
-- Netlify
-- AWS S3 + CloudFront
-- GitHub Pages
+## 🚀 **Deployment Workflow**
 
-## Contributing
+1. **Development** → Modify agents and components in ai-agency repo
+2. **Testing** → Use `npm run test` and `./scripts/deploy_agents.sh --env dev --dry-run`
+3. **Staging** → Deploy with `./scripts/deploy_agents.sh --env staging`
+4. **Production** → Deploy with `./scripts/deploy_agents.sh --env production`
+5. **Distribution** → Child projects sync via `./scripts/sync_agents.sh`
+
+---
+
+## 🤝 **Contributing**
 
 1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
+2. Create a feature branch (`git checkout -b feature/amazing-ai-feature`)
+3. Implement your changes with proper TypeScript types
+4. Add tests for new functionality
+5. Update documentation
+6. Commit your changes (`git commit -m 'Add amazing AI feature'`)
+7. Push to the branch (`git push origin feature/amazing-ai-feature`)
+8. Open a Pull Request
 
-## License
+---
 
-MIT License - see LICENSE file for details# Force redeploy Sun 15 Jun 2025 01:39:23 PST
+## 📄 **License**
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+---
+
+## 🎉 **Ready for Production!**
+
+**Repository Status:** ✅ Production Ready with Full AI Interaction Stack  
+**AI Components:** 3 (LearnBot RAG + RetailBot Validation + Vibe TestBot QA)  
+**Memory System:** Supabase-powered with encryption  
+**Integration Pattern:** Git Submodule + React Components  
+**Better Than:** Databricks One ✨
+
+🚀 **The most advanced AI interaction stack for enterprise dashboards!**
