@@ -1,0 +1,56 @@
+version: 3.0.0
+project: scout-analytics
+domain: https://scout-mvp.vercel.app
+pages:
+  - name: Overview
+    path: /
+    modules:
+      - KPI_Cards
+      - AgeDistribution
+      - CategoryLeaders
+      - RegionalPerformance
+  - name: Trends
+    path: /trends
+    modules:
+      - DailyTransactionChart
+      - RevenueBoxPlot
+      - ShoppingTimeHeatmap
+      - TrendFilters
+  - name: Products
+    path: /products
+    modules:
+      - SKUComboSankey
+      - CategoryBreakdown
+      - SubstitutionBehavior
+      - ProductFilters
+  - name: Consumer Profiles
+    path: /profiles
+    modules:
+      - AgeBracket
+      - GenderPieChart
+      - BarangayHeatmap
+      - CategoryTree
+  - name: AI Assist
+    path: /ai-assist
+    modules:
+      - RetailBotPanel
+      - VibeTestBotPanel
+      - AIRecommendationCards
+agents:
+  - RetailBot
+  - LearnBot
+  - Vibe TestBot
+data_sources:
+  - supabase
+  - azure_sql
+tech_stack:
+  framework: nextjs
+  language: typescript
+  style: tailwind
+  charts:
+    - recharts
+    - d3
+    - chartjs
+  state: zustand
+status: production
+deployed_at: '2025-06-15'
