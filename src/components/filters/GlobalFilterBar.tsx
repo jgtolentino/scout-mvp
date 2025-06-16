@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom'; // Added
 import { Calendar, MapPin, Package, Tag, Store, Filter, X, ChevronDown } from 'lucide-react';
 import { useFilterStore } from '../../store/useFilterStore';
 import { format } from 'date-fns';
@@ -41,6 +42,16 @@ const GlobalFilterBar: React.FC = () => {
   } = useFilterStore();
 
   const activeFilters = getActiveFilterCount();
+
+  const location = useLocation(); // Added
+  const currentPath = location.pathname; // Added
+
+  // Define filter visibility based on path
+  const showDateRangeFilter = true; // Always shown
+  const showRegionFilter = ['/', '/trends', '/consumers'].includes(currentPath);
+  const showCategoryFilter = ['/', '/products', '/consumers'].includes(currentPath);
+  const showBrandFilter = currentPath === '/products';
+  const showStoreFilter = false; // Not used for now as per instructions
 
   useEffect(() => {
     const fetchFilterOptions = async () => {
@@ -100,7 +111,7 @@ const GlobalFilterBar: React.FC = () => {
   };
 
   return (
-    <div className="tbwa-header sticky top-0 z-50 px-6 py-3 lg:ml-64 bg-white border-b border-gray-200 shadow-sm">
+    <div className="tbwa-header sticky top-0 z-50 px-6 py-3 bg-white border-b border-gray-200 shadow-sm"> {/* Removed lg:ml-64 */}
       {/* Horizontal Filter Display */}
       <div className="flex items-center justify-between">
         {/* Left side - Active filter pills */}
@@ -114,7 +125,7 @@ const GlobalFilterBar: React.FC = () => {
           </div>
           
           {/* Category Pills */}
-          {categories.slice(0, 2).map(category => (
+          {showCategoryFilter && categories.slice(0, 2).map(category => (
             <div key={category} className="flex items-center space-x-1 px-3 py-1.5 bg-blue-50 rounded-full border border-blue-200 text-xs">
               <span>{CATEGORY_ICONS[category] || '📦'}</span>
               <span className="text-blue-700 whitespace-nowrap">{category}</span>
@@ -123,14 +134,14 @@ const GlobalFilterBar: React.FC = () => {
               </button>
             </div>
           ))}
-          {categories.length > 2 && (
+          {showCategoryFilter && categories.length > 2 && (
             <div className="px-3 py-1.5 bg-blue-50 rounded-full border border-blue-200 text-xs text-blue-700">
               +{categories.length - 2} more
             </div>
           )}
           
           {/* Brand Pills */}
-          {brands.slice(0, 2).map(brand => (
+          {showBrandFilter && brands.slice(0, 2).map(brand => (
             <div key={brand} className="flex items-center space-x-1 px-3 py-1.5 bg-green-50 rounded-full border border-green-200 text-xs">
               <Tag className="h-3 w-3 text-green-600" />
               <span className="text-green-700 whitespace-nowrap">{brand}</span>
@@ -139,14 +150,14 @@ const GlobalFilterBar: React.FC = () => {
               </button>
             </div>
           ))}
-          {brands.length > 2 && (
+          {showBrandFilter && brands.length > 2 && (
             <div className="px-3 py-1.5 bg-green-50 rounded-full border border-green-200 text-xs text-green-700">
               +{brands.length - 2} more
             </div>
           )}
           
           {/* Region Pills */}
-          {barangays.slice(0, 2).map(barangay => (
+          {showRegionFilter && barangays.slice(0, 2).map(barangay => (
             <div key={barangay} className="flex items-center space-x-1 px-3 py-1.5 bg-purple-50 rounded-full border border-purple-200 text-xs">
               <MapPin className="h-3 w-3 text-purple-600" />
               <span className="text-purple-700 whitespace-nowrap">{barangay}</span>
@@ -155,7 +166,7 @@ const GlobalFilterBar: React.FC = () => {
               </button>
             </div>
           ))}
-          {barangays.length > 2 && (
+          {showRegionFilter && barangays.length > 2 && (
             <div className="px-3 py-1.5 bg-purple-50 rounded-full border border-purple-200 text-xs text-purple-700">
               +{barangays.length - 2} more
             </div>
@@ -196,6 +207,7 @@ const GlobalFilterBar: React.FC = () => {
       {isExpanded && (
         <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
           {/* Date Range */}
+          {showDateRangeFilter && (
           <div>
             <label className="block text-xs font-semibold text-tbwa-navy mb-3 uppercase tracking-wider">
               <Calendar className="inline h-4 w-4 mr-2" />
@@ -218,8 +230,10 @@ const GlobalFilterBar: React.FC = () => {
               />
             </div>
           </div>
+          )}
 
           {/* Barangays */}
+          {showRegionFilter && (
           <div>
             <label className="block text-xs font-semibold text-tbwa-navy mb-3 uppercase tracking-wider">
               <MapPin className="inline h-4 w-4 mr-2" />
@@ -239,8 +253,10 @@ const GlobalFilterBar: React.FC = () => {
               ))}
             </div>
           </div>
+          )}
 
           {/* Categories with Icons */}
+          {showCategoryFilter && (
           <div>
             <label className="block text-xs font-semibold text-tbwa-navy mb-3 uppercase tracking-wider">
               <Package className="inline h-4 w-4 mr-2" />
@@ -269,8 +285,10 @@ const GlobalFilterBar: React.FC = () => {
               ))}
             </div>
           </div>
+          )}
 
           {/* Brands with TBWA Highlighting */}
+          {showBrandFilter && (
           <div>
             <label className="block text-xs font-semibold text-tbwa-navy mb-3 uppercase tracking-wider">
               <Tag className="inline h-4 w-4 mr-2" />
@@ -309,8 +327,10 @@ const GlobalFilterBar: React.FC = () => {
               })}
             </div>
           </div>
+          )}
 
           {/* Stores */}
+          {showStoreFilter && (
           <div>
             <label className="block text-xs font-semibold text-tbwa-navy mb-3 uppercase tracking-wider">
               <Store className="inline h-4 w-4 mr-2" />
@@ -330,6 +350,7 @@ const GlobalFilterBar: React.FC = () => {
               ))}
             </div>
           </div>
+          )}
         </div>
       )}
     </div>

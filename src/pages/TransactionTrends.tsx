@@ -1,16 +1,28 @@
 import React, { useState, useEffect } from 'react';
-import { TrendingUp, MapPin, Calendar, BarChart3, Users, Activity } from 'lucide-react';
+import { TrendingUp, MapPin, Calendar, BarChart3, Users, Activity, Map } from 'lucide-react'; // Added Map icon
 import { useTransactionData } from '../hooks/useTransactionData';
 import { useFilterStore } from '../store/useFilterStore';
 import { getDataProvider } from '../lib/dataProvider';
 import { format, subDays, startOfDay, endOfDay } from 'date-fns';
+import BarChart from '../components/charts/BarChart'; // Added BarChart import
+import { ChartData } from '../types'; // Added ChartData import
 
+// Updated to reflect fields from geo_revenue_view
 interface RegionalData {
-  region: string;
+  region: string; // province or region name
+  city?: string; // city name
+  barangay?: string; // barangay name
   revenue: number;
-  transactions: number;
-  customers: number;
-  growth: number;
+  population?: number; // from geo_revenue_view
+  transactions?: number; // if available from view, otherwise calculate
+  customers?: number; // if available from view, otherwise calculate
+  growth?: number; // if available from view, otherwise mock/calculate
+}
+
+interface CityRevenueData {
+  city: string;
+  revenue: number;
+  barangays?: string[]; // For drilldown logging
 }
 
 interface TimeSeriesData {
@@ -26,60 +38,85 @@ const PHILIPPINE_REGIONS = [
 ];
 
 const TransactionTrends: React.FC = () => {
-  const { kpiData, loading, error } = useTransactionData();
-  const { setBarangays, setDateRange } = useFilterStore();
+  const { kpiData, loading, error: kpiError } = useTransactionData(); // Renamed error to kpiError
+  const { setBarangays, dateRange: currentFilters } = useFilterStore(); // Removed setDateRange, using currentFilters
   const [regionalData, setRegionalData] = useState<RegionalData[]>([]);
+  const [topCitiesData, setTopCitiesData] = useState<ChartData[]>([]);
   const [timeSeriesData, setTimeSeriesData] = useState<TimeSeriesData[]>([]);
   const [loadingRegional, setLoadingRegional] = useState(true);
+  const [regionalError, setRegionalError] = useState<string | null>(null);
+
 
   useEffect(() => {
     fetchRegionalData();
     fetchTimeSeriesData();
-  }, []);
+  }, [currentFilters.start, currentFilters.end]); // Re-fetch if date range changes
 
   const fetchRegionalData = async () => {
     try {
       setLoadingRegional(true);
+      setRegionalError(null);
       const db = getDataProvider();
       
-      // Fetch regional performance data
+      // Attempt to fetch from geo_revenue_view
+      // Adjust select query based on actual fields in geo_revenue_view
       const { data, error } = await db
-        .from('transactions_fmcg')
-        .select(`
-          total_amount,
-          customer_id,
-          stores!inner(barangay)
-        `);
+        .from('geo_revenue_view') // Querying the new view
+        .select('region, city, barangay, revenue, population, transactions_count, unique_customers_count') // Example fields
+        .gte('transaction_date', format(new Date(currentFilters.start), 'yyyy-MM-dd')) // Apply date filters
+        .lte('transaction_date', format(new Date(currentFilters.end), 'yyyy-MM-dd'));
 
-      if (error) throw error;
 
-      // Group by region and calculate metrics
-      const regionMap = new Map<string, { revenue: number; transactions: number; customers: Set<string> }>();
-      
-      data?.forEach((transaction: any) => {
-        const region = transaction.stores?.barangay || 'Unknown';
-        const current = regionMap.get(region) || { revenue: 0, transactions: 0, customers: new Set() };
-        
-        current.revenue += transaction.total_amount || 0;
-        current.transactions += 1;
-        if (transaction.customer_id) {
-          current.customers.add(transaction.customer_id);
+      if (error) {
+        console.error('Error fetching from geo_revenue_view:', error);
+        // Fallback or specific error handling if view doesn't exist
+        if (error.message.includes("relation \"geo_revenue_view\" does not exist")) {
+          setRegionalError("The 'geo_revenue_view' is not available. Please ensure it's created and populated. Displaying mock data or limited functionality.");
+          // To keep the page somewhat functional, you might load mock data here
+          // For now, we'll let it show an error and potentially empty charts.
+          setRegionalData([]);
+          setTopCitiesData([]);
+        } else {
+          throw error; // Rethrow other errors
         }
-        
-        regionMap.set(region, current);
-      });
+      } else if (data) {
+        // Process data from geo_revenue_view
+        const processedData: RegionalData[] = data.map((item: any) => ({
+          region: item.region || 'Unknown Region',
+          city: item.city || 'Unknown City',
+          barangay: item.barangay || 'Unknown Barangay',
+          revenue: item.revenue || 0,
+          population: item.population || 0,
+          transactions: item.transactions_count || 0, // from view
+          customers: item.unique_customers_count || 0, // from view
+          growth: Math.random() * 10 - 5, // Mock growth for now
+        }));
+        setRegionalData(processedData);
 
-      const regionData: RegionalData[] = Array.from(regionMap.entries()).map(([region, data]) => ({
-        region,
-        revenue: data.revenue,
-        transactions: data.transactions,
-        customers: data.customers.size,
-        growth: Math.random() * 20 - 5 // Mock growth data
-      })).sort((a, b) => b.revenue - a.revenue);
+        // Prepare data for Top 5 Cities Bar Chart
+        const cityRevenueMap = new Map<string, { revenue: number; barangays: Set<string> }>();
+        processedData.forEach(item => {
+          if (item.city && item.revenue) {
+            const current = cityRevenueMap.get(item.city) || { revenue: 0, barangays: new Set() };
+            current.revenue += item.revenue;
+            if(item.barangay) current.barangays.add(item.barangay);
+            cityRevenueMap.set(item.city, current);
+          }
+        });
 
-      setRegionalData(regionData);
-    } catch (error) {
-      console.error('Error fetching regional data:', error);
+        const sortedCities: CityRevenueData[] = Array.from(cityRevenueMap.entries())
+          .map(([city, data]) => ({ city, revenue: data.revenue, barangays: Array.from(data.barangays) }))
+          .sort((a, b) => b.revenue - a.revenue);
+
+        setTopCitiesData(
+          sortedCities.slice(0, 5).map(c => ({ name: c.city, value: c.revenue, barangays: c.barangays }))
+        );
+      }
+    } catch (err: any) {
+      console.error('Error processing regional data:', err);
+      setRegionalError(err.message || 'An unexpected error occurred while fetching regional data.');
+      setRegionalData([]);
+      setTopCitiesData([]);
     } finally {
       setLoadingRegional(false);
     }
@@ -117,8 +154,25 @@ const TransactionTrends: React.FC = () => {
     }
   };
 
-  const handleRegionClick = (region: string) => {
-    setBarangays([region]);
+  const handleRegionClick = (regionName: string) => {
+    // This function is for clicking on the region in the heatmap or list
+    // It should filter by the region name.
+    // If geo_revenue_view provides distinct regions, this can be used directly.
+    // If regions are provinces, and filters expect barangays, this might need adjustment
+    // For now, assuming regionName is a valid filter input for setBarangays
+    setBarangays([regionName]);
+  };
+
+  const handleCityBarClick = (data: ChartData) => {
+    console.log('Clicked City:', data.name, 'Revenue:', data.value);
+    if (data.barangays && Array.isArray(data.barangays)) {
+      console.log('Associated Barangays:', data.barangays);
+      // Future: setBarangays(data.barangays) or a new setCities filter
+      // For now, just logging. If we want to filter by city,
+      // we might need to adjust useFilterStore or how regions/cities/barangays are handled.
+      // This example assumes 'data.name' (city name) can be used as a filter term.
+      // setBarangays([data.name]); // Example: if city name can be a filter value
+    }
   };
 
   const getRegionColor = (revenue: number, maxRevenue: number) => {
@@ -130,27 +184,39 @@ const TransactionTrends: React.FC = () => {
     return 'bg-gray-300';
   };
 
-  const maxRevenue = Math.max(...regionalData.map(r => r.revenue));
+  const maxRevenueInView = Math.max(...regionalData.map(r => r.revenue), 0); // Ensure it's not -Infinity
 
   if (loading || loadingRegional) {
+    // Skeleton loader for the entire page or specific sections
     return (
-      <div className="space-y-6">
-        <div className="bg-white rounded-xl shadow-sm p-6">
-          <div className="animate-pulse space-y-4">
-            <div className="h-4 bg-gray-200 rounded w-1/4"></div>
-            <div className="h-32 bg-gray-200 rounded"></div>
-          </div>
+      <div className="space-y-6 animate-pulse">
+        <div className="bg-gray-300 rounded-xl p-6 h-24"></div>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          {[...Array(4)].map((_, i) => <div key={i} className="bg-gray-300 rounded-lg h-24"></div>)}
         </div>
+        <div className="grid lg:grid-cols-2 gap-6">
+          <div className="bg-gray-300 rounded-xl h-96"></div>
+          <div className="bg-gray-300 rounded-xl h-96"></div>
+        </div>
+        <div className="bg-gray-300 rounded-xl h-80"></div> {/* For City Bar Chart */}
+        <div className="bg-gray-300 rounded-xl h-80"></div> {/* For Time Series */}
       </div>
     );
   }
 
-  if (error) {
+  // Combined error display for KPI and Regional data
+  const pageError = kpiError || regionalError;
+  if (pageError) {
     return (
       <div className="bg-red-50 border border-red-200 rounded-xl p-6">
         <div className="text-red-800">
           <h3 className="font-semibold">Error loading trends data</h3>
-          <p className="mt-2 text-sm">{error}</p>
+          <p className="mt-2 text-sm">{typeof pageError === 'string' ? pageError : JSON.stringify(pageError)}</p>
+          {regionalError && regionalError.includes("geo_revenue_view") && (
+            <p className="mt-2 text-sm font-medium">
+              Please ensure the `geo_revenue_view` is correctly set up in Supabase for full functionality.
+            </p>
+          )}
         </div>
       </div>
     );
@@ -219,12 +285,21 @@ const TransactionTrends: React.FC = () => {
       </div>
 
       <div className="grid lg:grid-cols-2 gap-6">
-        {/* Regional Heatmap */}
+        {/* Regional Heatmap Placeholder */}
         <div className="bg-white rounded-xl shadow-sm p-6">
+          {/*
+            TODO: Replace this placeholder with a true GeoHeatMap component.
+            This requires:
+            1. A mapping library (e.g., Leaflet, Mapbox GL JS) and its React wrapper.
+            2. GeoJSON data for Philippine geographical boundaries.
+            3. The 'geo_revenue_view' to be fully populated with region/city/barangay boundaries,
+               revenue, and population data for weighting.
+            The current display is a simplified color-coded grid of regions.
+          */}
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-lg font-semibold text-gray-900 flex items-center">
               <MapPin className="h-5 w-5 mr-2 text-purple-600" />
-              Regional Performance Heatmap
+              Regional Performance (Placeholder Heatmap)
             </h3>
             <div className="flex items-center space-x-2 text-xs text-gray-500">
               <span>Low</span>
@@ -240,18 +315,19 @@ const TransactionTrends: React.FC = () => {
           </div>
           
           <div className="grid grid-cols-3 gap-2">
-            {regionalData.slice(0, 15).map((region) => (
+            {/* Display regions from geo_revenue_view, or fallback if empty */}
+            {(regionalData.length > 0 ? regionalData : PHILIPPINE_REGIONS.map(r => ({ region: r, revenue: 0, transactions: 0, customers: 0, growth: 0 }))).slice(0, 15).map((item) => (
               <button
-                key={region.region}
-                onClick={() => handleRegionClick(region.region)}
-                className={`p-3 rounded-lg border-2 border-transparent hover:border-gray-300 transition-all text-left ${getRegionColor(region.revenue, maxRevenue)}`}
+                key={item.region}
+                onClick={() => handleRegionClick(item.region)}
+                className={`p-3 rounded-lg border-2 border-transparent hover:border-gray-300 transition-all text-left ${getRegionColor(item.revenue, maxRevenueInView)}`}
               >
-                <div className="text-white text-xs font-medium">{region.region}</div>
+                <div className="text-white text-xs font-medium">{item.region}</div>
                 <div className="text-white text-xs opacity-90">
-                  ₱{region.revenue.toLocaleString()}
+                  ₱{item.revenue.toLocaleString()}
                 </div>
                 <div className="text-white text-xs opacity-75">
-                  {region.transactions} txns
+                  {item.transactions || 0} txns
                 </div>
               </button>
             ))}
@@ -266,29 +342,30 @@ const TransactionTrends: React.FC = () => {
           </h3>
           
           <div className="space-y-3">
-            {regionalData.slice(0, 8).map((region, index) => (
+            {/* Display regions from geo_revenue_view, or fallback if empty */}
+            {(regionalData.length > 0 ? regionalData : PHILIPPINE_REGIONS.map(r => ({ region: r, revenue: 0, transactions: 0, customers: 0, growth: 0 }))).slice(0, 8).map((item, index) => (
               <div
-                key={region.region}
+                key={item.region}
                 className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer transition-colors"
-                onClick={() => handleRegionClick(region.region)}
+                onClick={() => handleRegionClick(item.region)}
               >
                 <div className="flex items-center space-x-3">
                   <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
                     <span className="text-blue-600 font-medium text-sm">#{index + 1}</span>
                   </div>
                   <div>
-                    <div className="font-medium text-gray-900">{region.region}</div>
+                    <div className="font-medium text-gray-900">{item.region}</div>
                     <div className="text-sm text-gray-500">
-                      {region.transactions} transactions • {region.customers} customers
+                      {item.transactions || 0} transactions • {item.customers || 0} customers
                     </div>
                   </div>
                 </div>
                 <div className="text-right">
                   <div className="font-semibold text-gray-900">
-                    ₱{region.revenue.toLocaleString()}
+                    ₱{item.revenue.toLocaleString()}
                   </div>
-                  <div className={`text-sm ${region.growth >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                    {region.growth >= 0 ? '+' : ''}{region.growth.toFixed(1)}%
+                  <div className={`text-sm ${item.growth && item.growth >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    {item.growth && item.growth >= 0 ? '+' : ''}{(item.growth || 0).toFixed(1)}%
                   </div>
                 </div>
               </div>
@@ -303,28 +380,30 @@ const TransactionTrends: React.FC = () => {
           <Calendar className="h-5 w-5 mr-2 text-green-600" />
           Revenue Trend (Last 30 Days)
         </h3>
-        
-        <div className="h-64 flex items-end space-x-1">
-          {timeSeriesData.map((point, index) => {
-            const maxRevenue = Math.max(...timeSeriesData.map(p => p.revenue));
-            const height = (point.revenue / maxRevenue) * 100;
-            
-            return (
-              <div key={index} className="flex-1 flex flex-col items-center group">
-                <div
-                  className="w-full bg-blue-500 rounded-t hover:bg-blue-600 transition-colors relative"
-                  style={{ height: `${height}%` }}
-                >
-                  <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                    ₱{point.revenue.toLocaleString()}
-                  </div>
-                </div>
-                <div className="text-xs text-gray-500 mt-2">
-                  {format(new Date(point.date), 'MM/dd')}
-                </div>
-              </div>
-            );
-          })}
+        <div className="h-64"> {/* Ensure BarChart has a container with defined height */}
+          {timeSeriesData.length > 0 ? (
+             <BarChart
+                data={timeSeriesData.map(p => ({ name: format(new Date(p.date), 'MM/dd'), value: p.revenue }))}
+                color="#22C55E" // Green color for revenue trend
+             />
+          ) : <p className="text-center text-gray-500">No time series data available.</p>}
+        </div>
+      </div>
+
+      {/* Top 5 Cities by Revenue */}
+      <div className="bg-white rounded-xl shadow-sm p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-6 flex items-center">
+          <Map className="h-5 w-5 mr-2 text-indigo-600" /> {/* Changed icon */}
+          Top 5 Cities by Revenue
+        </h3>
+        <div className="h-80"> {/* Ensure BarChart has a container with defined height */}
+          {topCitiesData.length > 0 ? (
+            <BarChart
+              data={topCitiesData}
+              onBarClick={handleCityBarClick}
+              color="#4F46E5" // Indigo color
+            />
+          ) : <p className="text-center text-gray-500">No city revenue data available. This might be due to missing 'geo_revenue_view' or no data for the selected period.</p>}
         </div>
       </div>
     </div>
