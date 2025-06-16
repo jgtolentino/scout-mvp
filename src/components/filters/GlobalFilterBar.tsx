@@ -100,88 +100,98 @@ const GlobalFilterBar: React.FC = () => {
   };
 
   return (
-    <div className="tbwa-header sticky top-0 z-50 px-6 py-4 lg:ml-64">
+    <div className="tbwa-header sticky top-0 z-50 px-6 py-3 lg:ml-64 bg-white border-b border-gray-200 shadow-sm">
+      {/* Horizontal Filter Display */}
       <div className="flex items-center justify-between">
-        <button
-          onClick={() => setIsExpanded(!isExpanded)}
-          className="flex items-center space-x-3 text-tbwa-navy hover:text-tbwa-navy-800 transition-colors group"
-        >
-          <div className="p-2 bg-tbwa-navy-50 group-hover:bg-tbwa-navy-100 rounded-lg transition-colors">
-            <Filter className="h-4 w-4" />
+        {/* Left side - Active filter pills */}
+        <div className="flex items-center space-x-2 overflow-x-auto">
+          {/* Date Range Pill */}
+          <div className="flex items-center space-x-2 px-3 py-1.5 bg-gray-50 rounded-full border text-xs">
+            <Calendar className="h-3 w-3 text-gray-500" />
+            <span className="text-gray-600 whitespace-nowrap">
+              {format(new Date(dateRange.start), 'MMM d')} - {format(new Date(dateRange.end), 'MMM d')}
+            </span>
           </div>
-          <div>
-            <span className="font-semibold text-base">Smart Filters</span>
-            {activeFilters > 0 && (
-              <span className="ml-2 tbwa-badge">{activeFilters} active</span>
-            )}
-          </div>
-          <ChevronDown className={clsx(
-            "h-4 w-4 transition-transform duration-200",
-            isExpanded ? "rotate-180" : ""
-          )} />
-        </button>
-
+          
+          {/* Category Pills */}
+          {categories.slice(0, 2).map(category => (
+            <div key={category} className="flex items-center space-x-1 px-3 py-1.5 bg-blue-50 rounded-full border border-blue-200 text-xs">
+              <span>{CATEGORY_ICONS[category] || '📦'}</span>
+              <span className="text-blue-700 whitespace-nowrap">{category}</span>
+              <button onClick={() => handleMultiSelect(category, categories, setCategories)}>
+                <X className="h-3 w-3 text-blue-500 hover:text-blue-700" />
+              </button>
+            </div>
+          ))}
+          {categories.length > 2 && (
+            <div className="px-3 py-1.5 bg-blue-50 rounded-full border border-blue-200 text-xs text-blue-700">
+              +{categories.length - 2} more
+            </div>
+          )}
+          
+          {/* Brand Pills */}
+          {brands.slice(0, 2).map(brand => (
+            <div key={brand} className="flex items-center space-x-1 px-3 py-1.5 bg-green-50 rounded-full border border-green-200 text-xs">
+              <Tag className="h-3 w-3 text-green-600" />
+              <span className="text-green-700 whitespace-nowrap">{brand}</span>
+              <button onClick={() => handleMultiSelect(brand, brands, setBrands)}>
+                <X className="h-3 w-3 text-green-500 hover:text-green-700" />
+              </button>
+            </div>
+          ))}
+          {brands.length > 2 && (
+            <div className="px-3 py-1.5 bg-green-50 rounded-full border border-green-200 text-xs text-green-700">
+              +{brands.length - 2} more
+            </div>
+          )}
+          
+          {/* Region Pills */}
+          {barangays.slice(0, 2).map(barangay => (
+            <div key={barangay} className="flex items-center space-x-1 px-3 py-1.5 bg-purple-50 rounded-full border border-purple-200 text-xs">
+              <MapPin className="h-3 w-3 text-purple-600" />
+              <span className="text-purple-700 whitespace-nowrap">{barangay}</span>
+              <button onClick={() => handleMultiSelect(barangay, barangays, setBarangays)}>
+                <X className="h-3 w-3 text-purple-500 hover:text-purple-700" />
+              </button>
+            </div>
+          ))}
+          {barangays.length > 2 && (
+            <div className="px-3 py-1.5 bg-purple-50 rounded-full border border-purple-200 text-xs text-purple-700">
+              +{barangays.length - 2} more
+            </div>
+          )}
+        </div>
+        
+        {/* Right side - Filter controls */}
         <div className="flex items-center space-x-3">
           {activeFilters > 0 && (
             <button
               onClick={resetFilters}
-              className="flex items-center space-x-2 text-sm font-medium text-red-600 hover:text-red-700 px-3 py-1.5 hover:bg-red-50 rounded-lg transition-colors"
+              className="text-sm text-gray-500 hover:text-gray-700 flex items-center space-x-1"
             >
-              <X className="h-3 w-3" />
-              <span>Clear All</span>
+              <X className="h-4 w-4" />
+              <span>Clear all</span>
             </button>
           )}
           
-          {/* Filter Presets */}
-          <div className="flex items-center space-x-2">
-            <button className="tbwa-btn-secondary text-xs px-3 py-1.5">
-              📊 Executive View
-            </button>
-            <button className="tbwa-btn-secondary text-xs px-3 py-1.5">
-              🏷️ Brand Manager
-            </button>
-          </div>
+          <button
+            onClick={() => setIsExpanded(!isExpanded)}
+            className={clsx(
+              "flex items-center space-x-2 px-3 py-1.5 rounded-lg border transition-all text-sm font-medium",
+              isExpanded
+                ? "border-tbwa-navy bg-tbwa-navy text-white"
+                : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+            )}
+          >
+            <Filter className="h-4 w-4" />
+            <span>Filters</span>
+            <ChevronDown className={clsx(
+              "h-4 w-4 transition-transform duration-200",
+              isExpanded ? "rotate-180" : ""
+            )} />
+          </button>
         </div>
       </div>
-
-      {/* Active Filter Tags */}
-      {activeFilters > 0 && (
-        <div className="mt-3 flex flex-wrap gap-2">
-          {dateRange.from && (
-            <span className="tbwa-filter-chip tbwa-filter-chip-active">
-              📅 {format(dateRange.from, 'MMM dd')} - {dateRange.to ? format(dateRange.to, 'MMM dd') : 'now'}
-              <X className="h-3 w-3 ml-1 cursor-pointer" onClick={() => setDateRange(null, null)} />
-            </span>
-          )}
-          {barangays.map(barangay => (
-            <span key={barangay} className="tbwa-filter-chip tbwa-filter-chip-active">
-              📍 {barangay}
-              <X className="h-3 w-3 ml-1 cursor-pointer" onClick={() => handleMultiSelect(barangay, barangays, setBarangays)} />
-            </span>
-          ))}
-          {categories.map(category => (
-            <span key={category} className="tbwa-filter-chip tbwa-filter-chip-active">
-              {CATEGORY_ICONS[category] || '📦'} {category}
-              <X className="h-3 w-3 ml-1 cursor-pointer" onClick={() => handleMultiSelect(category, categories, setCategories)} />
-            </span>
-          ))}
-          {brands.map(brand => (
-            <span key={brand} className={clsx(
-              "tbwa-filter-chip tbwa-filter-chip-active",
-              TBWA_BRANDS.includes(brand) && "tbwa-brand-highlight"
-            )}>
-              {TBWA_BRANDS.includes(brand) ? '⭐' : '🏷️'} {brand}
-              <X className="h-3 w-3 ml-1 cursor-pointer" onClick={() => handleMultiSelect(brand, brands, setBrands)} />
-            </span>
-          ))}
-          {stores.map(store => (
-            <span key={store} className="tbwa-filter-chip tbwa-filter-chip-active">
-              🏪 {store}
-              <X className="h-3 w-3 ml-1 cursor-pointer" onClick={() => handleMultiSelect(store, stores, setStores)} />
-            </span>
-          ))}
-        </div>
-      )}
 
       {isExpanded && (
         <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">

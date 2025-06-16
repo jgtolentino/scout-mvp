@@ -5,6 +5,7 @@ import {
   TrendingUp, 
   Package, 
   Users, 
+  Bot,
   ChevronRight,
   BarChart3,
   RefreshCw
@@ -19,9 +20,10 @@ const Sidebar: React.FC = () => {
 
   const navigation = [
     { name: 'Overview', href: '/', icon: Home, description: 'Executive dashboard' },
-    { name: 'Trends', href: '/trends', icon: TrendingUp, description: 'Transaction trends' },
-    { name: 'Products', href: '/products', icon: Package, description: 'Product analysis' },
-    { name: 'Consumers', href: '/consumers', icon: Users, description: 'Consumer insights' },
+    { name: 'Trends', href: '/trends', icon: TrendingUp, description: 'Regional & temporal analysis' },
+    { name: 'Product Mix', href: '/products', icon: Package, description: 'Category & basket analysis' },
+    { name: 'Consumers', href: '/consumers', icon: Users, description: 'Demographics & behavior' },
+    { name: 'RetailBot', href: '/retailbot', icon: Bot, description: 'AI insights & assistance' },
   ];
 
   return (

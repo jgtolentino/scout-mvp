@@ -8,6 +8,7 @@ import Overview from './pages/Overview';
 import TransactionTrends from './pages/TransactionTrends';
 import ProductMix from './pages/ProductMix';
 import ConsumerInsights from './pages/ConsumerInsights';
+import RetailBot from './pages/RetailBot';
 // SnowWhite Sanitized Components
 import { ClientSanitizer } from './utils/client-sanitizer';
 
@@ -46,6 +47,7 @@ function App() {
               <Route path="/trends" element={<TransactionTrends />} />
               <Route path="/products" element={<ProductMix />} />
               <Route path="/consumers" element={<ConsumerInsights />} />
+              <Route path="/retailbot" element={<RetailBot />} />
             </Routes>
           </main>
         </div>
