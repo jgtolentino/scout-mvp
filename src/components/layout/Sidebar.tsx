@@ -7,11 +7,7 @@ import {
   Users, 
   ChevronRight,
   BarChart3,
-  RefreshCw,
-  MessageCircle,
-  Database,
-  Star,
-  GraduationCap
+  RefreshCw
 } from 'lucide-react';
 import { useFilterStore } from '../../store/useFilterStore';
 import { clsx } from 'clsx';
@@ -22,14 +18,10 @@ const Sidebar: React.FC = () => {
   const activeFilters = getActiveFilterCount();
 
   const navigation = [
-    { name: 'Overview', href: '/', icon: Home, description: 'Executive dashboard', isPremium: true },
-    { name: 'Transaction Trends', href: '/trends', icon: TrendingUp, description: 'Temporal analysis' },
-    { name: 'Product Mix', href: '/products', icon: Package, description: 'Category performance', isPremium: true },
-    { name: 'Consumer Insights', href: '/consumers', icon: Users, description: 'Demographics' },
-    { name: 'All Transactions', href: '/transactions', icon: Database, description: 'Complete records (5K)' },
-    { name: 'Chat', href: '/chat', icon: MessageCircle, description: 'Scout AI Assistant', isPremium: true },
-    { name: 'Yummy Intelligence', href: '/yummy', icon: Star, description: 'FMCG Intelligence Agent', isPremium: true },
-    { name: 'LearnBot Tutorial', href: '/learn', icon: GraduationCap, description: 'Interactive Learning System', isPremium: true },
+    { name: 'Overview', href: '/', icon: Home, description: 'Executive dashboard' },
+    { name: 'Trends', href: '/trends', icon: TrendingUp, description: 'Transaction trends' },
+    { name: 'Products', href: '/products', icon: Package, description: 'Product analysis' },
+    { name: 'Consumers', href: '/consumers', icon: Users, description: 'Consumer insights' },
   ];
 
   return (
@@ -93,15 +85,10 @@ const Sidebar: React.FC = () => {
                     <div className="font-medium text-sm">{item.name}</div>
                     <div className="text-xs opacity-75 mt-0.5">{item.description}</div>
                   </div>
-                  <div className="flex items-center space-x-1">
-                    {item.isPremium && (
-                      <Star className="h-3 w-3 text-tbwa-yellow" />
-                    )}
-                    <ChevronRight className={clsx(
-                      "h-4 w-4 transition-transform",
-                      isActive ? "rotate-90" : ""
-                    )} />
-                  </div>
+                  <ChevronRight className={clsx(
+                    "h-4 w-4 transition-transform",
+                    isActive ? "rotate-90" : ""
+                  )} />
                 </div>
                 {/* Active indicator */}
                 {isActive && (
