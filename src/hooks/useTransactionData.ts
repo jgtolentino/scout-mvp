@@ -4,6 +4,13 @@ import { KPIData, ChartData, TimeSeriesData } from '../types';
 import { format } from 'date-fns';
 import { getDataProvider } from '../lib/dataProvider';
 
+// Helper function to validate dates
+const isValidDate = (dateString: string | Date | null | undefined): boolean => {
+  if (!dateString) return false;
+  const date = new Date(dateString);
+  return date instanceof Date && !isNaN(date.getTime()) && dateString !== '';
+};
+
 interface Transaction {
   id: string;
   transaction_date: string;
@@ -67,12 +74,20 @@ export const useTransactionData = () => {
           `)
           .order('transaction_date', { ascending: false });
 
-        // Apply date range filter
-        if (dateRange.from) {
-          query = query.gte('transaction_date', format(dateRange.from, 'yyyy-MM-dd'));
+        // Apply date range filter with validation
+        if (dateRange.from && isValidDate(dateRange.from)) {
+          try {
+            query = query.gte('transaction_date', format(new Date(dateRange.from), 'yyyy-MM-dd'));
+          } catch (err) {
+            console.warn('[Scout] Invalid from date:', dateRange.from);
+          }
         }
-        if (dateRange.to) {
-          query = query.lte('transaction_date', format(dateRange.to, 'yyyy-MM-dd'));
+        if (dateRange.to && isValidDate(dateRange.to)) {
+          try {
+            query = query.lte('transaction_date', format(new Date(dateRange.to), 'yyyy-MM-dd'));
+          } catch (err) {
+            console.warn('[Scout] Invalid to date:', dateRange.to);
+          }
         }
 
         // Note: barangay, category, brand, store filters removed for simplified query

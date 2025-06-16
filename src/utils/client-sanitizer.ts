@@ -236,13 +236,19 @@ class ClientSanitizer {
 
     // Send to client-safe logging endpoint (if available)
     if (typeof fetch !== 'undefined') {
-      fetch('/api/client-errors', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(sanitizedError)
-      }).catch(() => {
-        // Silent fail for error reporting
-      });
+      // Only attempt to send if we're not in a local development environment
+      const isLocalhost = window.location.hostname === 'localhost' || 
+                         window.location.hostname === '127.0.0.1';
+      
+      if (!isLocalhost) {
+        fetch('/api/client-errors', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(sanitizedError)
+        }).catch(() => {
+          // Silent fail for error reporting
+        });
+      }
     }
   }
 
