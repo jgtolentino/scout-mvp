@@ -8,6 +8,7 @@ import Overview from './pages/Overview';
 import Performance from './pages/Performance';
 import PromoCompetition from './pages/PromoCompetition';
 import ScoutAI from './pages/Chat';
+import Learn from './pages/Learn';
 import PersistentChatWidget from './components/chat/PersistentChatWidget';
 import LearnBotModal from './components/LearnBotModal';
 // SnowWhite Sanitized Components
@@ -66,6 +67,7 @@ function App() {
               <Route path="/performance" element={<Performance />} />
               <Route path="/promo" element={<PromoCompetition />} />
               <Route path="/ai" element={<ScoutAI />} />
+              <Route path="/learn" element={<Learn />} />
             </Routes>
           </main>
         </div>

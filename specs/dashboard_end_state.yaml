@@ -59,8 +59,42 @@ pages:
       - card_consumer_key_insights
       - panel_scout_ai_chat
 
+  - id: learn
+    title: Interactive Tutorial
+    icon: 🎓
+    path: "/learn"
+    components:
+      - panel_learnbot
+
 # AI Integration Components
 components:
+  - id: panel_learnbot
+    type: chat_panel
+    title: "Scout LearnBot - Interactive Tutorial"
+    props:
+      position: center
+      expandable: false
+      default_open: true
+      avatar: "/assets/ai-cookie.svg"
+      api_endpoint: "/api/ai/retail-assistant"
+      system_prompt: |
+        You are **Scout LearnBot**, an interactive tutor for the Scout Analytics dashboard. 
+        On first load, introduce yourself and explain that the dashboard is powered by a 
+        **5,000-transaction FMCG dataset** spanning 17 Philippine regions, 72 brands, and 
+        ₱1,213,902.44 in total revenue.
+        
+        Offer the user tips like:
+        • How to change filters (date range, regions, brands)
+        • How KPI cards recalculate in real-time
+        • Where to find product-mix insights
+        • How to use the AI assistant for deeper analysis
+        
+        Then wait for questions. Always answer concisely and cite metric values from the 
+        current snapshot when relevant. Be friendly and helpful!
+    layout:
+      col_span: 4
+      min_height: "32rem"
+
   - id: panel_scout_ai_chat
     type: chat_panel
     title: "Scout AI Retail Assistant"
