@@ -2,7 +2,6 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { clsx } from 'clsx'
 
 const navigationItems = [
   {
@@ -49,12 +48,11 @@ export default function Navigation() {
               <Link
                 key={item.href}
                 href={item.href}
-                className={clsx(
-                  'flex items-center space-x-3 py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap transition-colors duration-200',
+                className={`flex items-center space-x-3 py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap transition-colors duration-200 ${
                   isActive
                     ? 'border-blue-500 text-blue-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                )}
+                }`}
               >
                 <span className="text-lg">{item.icon}</span>
                 <div className="flex flex-col">
@@ -78,12 +76,11 @@ export default function Navigation() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={clsx(
-                    'flex flex-col items-center p-3 rounded-lg min-w-0 flex-shrink-0 transition-colors duration-200',
+                  className={`flex flex-col items-center p-3 rounded-lg min-w-0 flex-shrink-0 transition-colors duration-200 ${
                     isActive
                       ? 'text-blue-600 bg-blue-50'
                       : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
-                  )}
+                  }`}
                 >
                   <span className="text-xl mb-1">{item.icon}</span>
                   <span className="text-xs font-medium text-center">{item.title}</span>

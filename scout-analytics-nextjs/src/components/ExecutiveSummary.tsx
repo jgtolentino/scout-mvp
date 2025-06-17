@@ -1,5 +1,11 @@
-export default function KPICards() {
-  const kpis = [
+'use client'
+
+import { useState } from 'react'
+
+export default function ExecutiveSummary() {
+  const [isExpanded, setIsExpanded] = useState(true)
+
+  const kpiData = [
     {
       title: 'Total Revenue',
       value: '₱3.84M',
@@ -36,7 +42,10 @@ export default function KPICards() {
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-      <div className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors">
+      <div 
+        className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors"
+        onClick={() => setIsExpanded(!isExpanded)}
+      >
         <div className="flex items-center space-x-3">
           <div className="flex-shrink-0 text-gray-400">📊</div>
           <div>
@@ -51,18 +60,23 @@ export default function KPICards() {
         </div>
         <div className="flex items-center space-x-2">
           <button className="p-1 rounded-lg hover:bg-gray-100 transition-colors">
-            <svg className="w-5 h-5 text-gray-400 transition-transform duration-200 transform rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+            <svg 
+              className={`w-5 h-5 text-gray-400 transition-transform duration-200 transform ${isExpanded ? 'rotate-180' : ''}`} 
+              fill="none" 
+              stroke="currentColor" 
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
             </svg>
           </button>
         </div>
       </div>
-
-      <div className="transition-all duration-300 overflow-hidden">
+      
+      <div className={`transition-all duration-300 overflow-hidden ${isExpanded ? 'max-h-none opacity-100' : 'max-h-0 opacity-0'}`}>
         <div className="px-4 pb-4">
           <div className="border-t border-gray-200 pt-4">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {kpis.map((kpi, index) => (
+              {kpiData.map((kpi, index) => (
                 <div key={index} className="bg-white rounded-lg p-6 border border-gray-200">
                   <div className="flex items-center">
                     <div className="flex-shrink-0">
@@ -77,9 +91,7 @@ export default function KPICards() {
                       </dl>
                     </div>
                     <div className="flex-shrink-0">
-                      <span className={`text-sm font-medium ${
-                        kpi.changeType === 'positive' ? 'text-green-600' : 'text-red-600'
-                      }`}>
+                      <span className={`text-sm font-medium ${kpi.changeType === 'positive' ? 'text-green-600' : 'text-red-600'}`}>
                         {kpi.change}
                       </span>
                     </div>

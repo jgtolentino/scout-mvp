@@ -1,6 +1,11 @@
+'use client'
+
+import { useState } from 'react'
 import Link from 'next/link'
 
 export default function RegionalPerformance() {
+  const [isExpanded, setIsExpanded] = useState(true)
+
   const regions = [
     {
       name: 'Metro Manila',
@@ -8,7 +13,7 @@ export default function RegionalPerformance() {
       growth: '+12.3% growth',
       bgColor: 'bg-blue-50',
       textColor: 'text-blue-900',
-      subColor: 'text-blue-700'
+      growthColor: 'text-green-600'
     },
     {
       name: 'Cebu',
@@ -16,7 +21,7 @@ export default function RegionalPerformance() {
       growth: '+8.7% growth',
       bgColor: 'bg-green-50',
       textColor: 'text-green-900',
-      subColor: 'text-green-700'
+      growthColor: 'text-green-600'
     },
     {
       name: 'Davao',
@@ -24,13 +29,16 @@ export default function RegionalPerformance() {
       growth: '+15.2% growth',
       bgColor: 'bg-purple-50',
       textColor: 'text-purple-900',
-      subColor: 'text-purple-700'
+      growthColor: 'text-green-600'
     }
   ]
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-      <div className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors">
+      <div 
+        className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors"
+        onClick={() => setIsExpanded(!isExpanded)}
+      >
         <div className="flex items-center space-x-3">
           <div className="flex-shrink-0 text-gray-400">🗺️</div>
           <div>
@@ -45,14 +53,19 @@ export default function RegionalPerformance() {
         </div>
         <div className="flex items-center space-x-2">
           <button className="p-1 rounded-lg hover:bg-gray-100 transition-colors">
-            <svg className="w-5 h-5 text-gray-400 transition-transform duration-200 transform rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+            <svg 
+              className={`w-5 h-5 text-gray-400 transition-transform duration-200 transform ${isExpanded ? 'rotate-180' : ''}`} 
+              fill="none" 
+              stroke="currentColor" 
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
             </svg>
           </button>
         </div>
       </div>
-
-      <div className="transition-all duration-300 overflow-hidden">
+      
+      <div className={`transition-all duration-300 overflow-hidden ${isExpanded ? 'max-h-none opacity-100' : 'max-h-0 opacity-0'}`}>
         <div className="px-4 pb-4">
           <div className="border-t border-gray-200 pt-4">
             <div className="bg-white rounded-lg p-6 border border-gray-200">
@@ -60,8 +73,8 @@ export default function RegionalPerformance() {
                 {regions.map((region, index) => (
                   <div key={index} className={`text-center p-4 ${region.bgColor} rounded-lg`}>
                     <div className={`text-2xl font-bold ${region.textColor}`}>{region.revenue}</div>
-                    <div className={`text-sm ${region.subColor}`}>{region.name}</div>
-                    <div className="text-xs text-green-600">{region.growth}</div>
+                    <div className={`text-sm ${region.textColor.replace('900', '700')}`}>{region.name}</div>
+                    <div className={`text-xs ${region.growthColor}`}>{region.growth}</div>
                   </div>
                 ))}
               </div>
