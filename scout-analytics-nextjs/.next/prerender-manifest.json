@@ -1,30 +1,6 @@
 {
   "version": 4,
   "routes": {
-    "/ai-assist": {
-      "experimentalBypassFor": [
-        {
-          "type": "header",
-          "key": "Next-Action"
-        },
-        {
-          "type": "header",
-          "key": "content-type",
-          "value": "multipart/form-data;.*"
-        }
-      ],
-      "initialRevalidateSeconds": false,
-      "srcRoute": "/ai-assist",
-      "dataRoute": "/ai-assist.rsc",
-      "allowHeader": [
-        "host",
-        "x-matched-path",
-        "x-prerender-revalidate",
-        "x-prerender-revalidate-if-generated",
-        "x-next-revalidated-tags",
-        "x-next-revalidate-tag-token"
-      ]
-    },
     "/products": {
       "experimentalBypassFor": [
         {
@@ -73,6 +49,30 @@
         "x-next-revalidate-tag-token"
       ]
     },
+    "/ai-assist": {
+      "experimentalBypassFor": [
+        {
+          "type": "header",
+          "key": "Next-Action"
+        },
+        {
+          "type": "header",
+          "key": "content-type",
+          "value": "multipart/form-data;.*"
+        }
+      ],
+      "initialRevalidateSeconds": false,
+      "srcRoute": "/ai-assist",
+      "dataRoute": "/ai-assist.rsc",
+      "allowHeader": [
+        "host",
+        "x-matched-path",
+        "x-prerender-revalidate",
+        "x-prerender-revalidate-if-generated",
+        "x-next-revalidated-tags",
+        "x-next-revalidate-tag-token"
+      ]
+    },
     "/": {
       "experimentalBypassFor": [
         {
@@ -101,8 +101,8 @@
   "dynamicRoutes": {},
   "notFoundRoutes": [],
   "preview": {
-    "previewModeId": "32eaa1b4c23c02aa870db6c6f9ff6fb0",
-    "previewModeSigningKey": "3bf50dc00e2d84f1e37192b5c56865cc428e1f7625455887bf723b5dc99c9ce5",
-    "previewModeEncryptionKey": "83e30cb77c8e806a4c7d4ff74ce27a5d56c22594a3d6449645007547f04771a0"
+    "previewModeId": "16038ad3c69b60e7750e5b2c06b45fd6",
+    "previewModeSigningKey": "a952fb778feb203353dd2da501a76b817529db670ac0f91492813860b0ac9b7a",
+    "previewModeEncryptionKey": "2a00aac47fcefa859dd6130019bb15cbb718493a3b710b8d66fd695061b28ebf"
   }
 }
