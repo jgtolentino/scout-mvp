@@ -1,5 +1,11 @@
 {
-  "buildCommand": "next build",
-  "installCommand": "npm install",
-  "framework": "nextjs"
+  "version": 3,
+  "framework": "nextjs",
+  "buildCommand": "npm run build",
+  "outputDirectory": ".next",
+  "routes": [
+    { "src": "/api/(.*)", "dest": "/api/$1" }
+  ],
+  "ignoreCommand": "echo 'no-ignore'",
+  "installCommand": "npm ci"
 }
